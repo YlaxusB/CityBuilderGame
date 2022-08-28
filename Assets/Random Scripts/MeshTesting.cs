@@ -26,39 +26,44 @@ public class MeshTesting : MonoBehaviour
 
     GameObject straightPreviewPivot;
     GameObject gameObject;
-    GameObject straightGameObject;
     void Update()
     {
         if (canRun)
         {
             if (Input.GetButtonDown("Fire1"))
             {
-                Debug.Log(raycast(camera));
                 Debug.Log("Clicked");
                 if (points.Count < 3)
                 {
                     Debug.Log("Added");
                     points.Add(raycast(camera));
                 }
-                Debug.Log(points[0]);
 
                 // Starts the straight preview if there's only one position in points
-                if(points.Count == 1)
+                if (points.Count == 1)
                 {
                     Destroy(GameObject.Find("PreviewEarlyRoad"));
                     // Creates the pivot and cube of straight preview
-                    straightGameObject = CreateStraightPreview(new List<Vector3> { points[0], raycast(camera) }, camera, 0.01f);
+                    straightPreviewPivot = new GameObject();
+                    straightPreviewPivot.name = "Straight Preview Pivot";
+
+                    GameObject straightPreviewCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    straightPreviewCube.transform.SetParent(straightPreviewPivot.transform);
+                    straightPreviewCube.name = "Straight Preview Cube";
+                    straightPreviewCube.transform.localPosition = new Vector3(0.5f, 0, 0);
+
                     canRunStraightPreview = true;
-                } else if(points.Count > 1)
+                }
+                else if (points.Count > 1)
                 {
-                    Destroy(straightGameObject);
+                    Destroy(straightPreviewPivot);
                     canRunStraightPreview = false;
                 }
 
                 // Starts the curved preview if there's only two positions in points
                 if (points.Count == 2)
                 {
-                    gameObject = CreateCurvedPreview(new List<Vector3> { points[0], points[1], raycast(camera)}, 0.01f);
+                    gameObject = CreateCurvedPreview(new List<Vector3> { points[0], points[1], raycast(camera) });
                     canRunCurvedPreview = true;
                 }
                 else if (points.Count > 2)
@@ -69,7 +74,7 @@ public class MeshTesting : MonoBehaviour
 
                 if (points.Count == 3)
                 {
-                    foreach(Vector3 point in points)
+                    foreach (Vector3 point in points)
                     {
                         Debug.Log(point);
                     }
@@ -100,7 +105,7 @@ public class MeshTesting : MonoBehaviour
         // Update preview of straight road every frame
         if (canRunStraightPreview)
         {
-            updateStraightPreview(straightGameObject, 0.1f);
+            updateStraightPreview(points[0]);
         }
 
         // Update preview of curved road every frame
@@ -124,12 +129,12 @@ public class MeshTesting : MonoBehaviour
         return mesh;
     }
 
-    // Create the gameObject of curved preview road
-    GameObject CreateCurvedPreview(List<Vector3> points, float tMultiplier)
+    // Create the gameObject
+    GameObject CreateCurvedPreview(List<Vector3> points)
     {
         GameObject gameObject = new GameObject("Curved Preview Mesh", typeof(MeshFilter), typeof(MeshRenderer));
 
-        Vector2[] bezierPoints = GetCurvedPoints(new Vector3[] { points[0], points[1], raycast(camera) }, 0).ToArray();
+        Vector2[] bezierPoints = GetCurvedPoints(new Vector3[] { points[0], points[1], raycast(camera) }, 0.01f).ToArray();
         Mesh mesh = CreateRoadMesh(bezierPoints);
         gameObject.GetComponent<MeshFilter>().mesh = mesh;
 
@@ -141,49 +146,14 @@ public class MeshTesting : MonoBehaviour
         return gameObject;
     }
 
-    // Create the gameObject of straight preview road
-    GameObject CreateStraightPreview(List<Vector3> points, Camera camera, float tMultiplier)
-    {
-        GameObject straightGameObject = new GameObject("Straight Preview Mesh", typeof(MeshFilter), typeof(MeshRenderer));
-
-        //Vector2[] bezierPoints = GetCurvedPoints(new Vector3[] { points[0], points[1], raycast(camera) }, 0).ToArray();
-        Vector3 ray = raycast(camera);
-        Vector2[] bezierPoints = new Vector2[]{ Vector2.Lerp(new Vector2(points[0].x, points[0].z), new Vector2(ray.x, ray.z), 0) };
-        Mesh mesh = CreateRoadMesh(bezierPoints);
-       // straightGameObject.GetComponent<MeshFilter>().mesh = mesh;
-
-        straightGameObject.GetComponent<MeshRenderer>().material = material;
-        straightGameObject.transform.position = new Vector3(points[0].x, 1.6f, points[0].z);
-        straightGameObject.transform.rotation = Quaternion.Euler(90, 0, 0);
-        points = new List<Vector3>();
-
-        return straightGameObject;
-    }
-
     // The preview of a straight road, using starting position and a mouse raycast
-    void updateStraightPreview(GameObject straightGameObject, float tMultiplier)
+    void updateStraightPreview(Vector3 startPosition)
     {
-        Vector2 endPosition = Vector3To2(raycast(camera));
-
-        Vector2 startPosition = Vector3To2(points[0]);
-        float angle = -Mathf.Atan2(endPosition.y - startPosition.y, endPosition.x - startPosition.x) * (180 / Mathf.PI);
-        Debug.Log(angle);
-        //straightGameObject.transform.rotation = Quaternion.Euler(90, angle, 0);
-
-        List<Vector2> bezierPoints = new List<Vector2>(); //GetCurvedPoints(new Vector3[] { points[0], points[1], raycast(camera) }, 0.01f).ToArray();
-        Vector3 ray = raycast(camera);
-        Debug.Log("INICIO -----------------------");
-        Debug.Log(points[0]);
-        Debug.Log(startPosition);
-        Debug.Log(endPosition);
-        for (float i = 0; i < 1; i += tMultiplier)
-        {
-            Vector2 calc = startPosition + i * (endPosition - startPosition);
-            Debug.Log(i + "   " + calc);
-            bezierPoints.Add(calc);
-        }
-        
-        straightGameObject.GetComponent<MeshFilter>().mesh = CreateRoadMesh(bezierPoints.ToArray());//updateCurvedMesh(mesh);
+        straightPreviewPivot.transform.position = startPosition;
+        Vector3 endPosition = raycast(camera);
+        float angle = -Mathf.Atan2(endPosition.z - startPosition.z, endPosition.x - startPosition.x) * (180 / Mathf.PI);
+        straightPreviewPivot.transform.rotation = Quaternion.Euler(0, angle, 0);
+        straightPreviewPivot.transform.localScale = new Vector3(Vector3.Distance(endPosition, startPosition), 1, 1);
     }
 
     // Create an empty object with the mesh
