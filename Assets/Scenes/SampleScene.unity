@@ -1078,8 +1078,8 @@ MonoBehaviour:
   cameraPosition: {x: 0, y: 0, z: 0}
   turn: {x: 0, y: 0, z: 0}
   altitude: 0
-  forwardSensivity: 0.2
-  rightSensivity: 0.2
+  forwardSensivity: 3
+  rightSensivity: 3
   upSensivity: 1.5
 --- !u!114 &963194230
 MonoBehaviour:
