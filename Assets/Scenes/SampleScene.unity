@@ -312,7 +312,7 @@ Transform:
   m_GameObject: {fileID: 161229751}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -29.4464, y: 1.5806, z: -4.9484}
-  m_LocalScale: {x: 33, y: 3.9202754, z: 33}
+  m_LocalScale: {x: 333, y: 3.9202754, z: 333}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1505,7 +1505,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   material: {fileID: 2100000, guid: 6be55170a0311b144956792528a2c086, type: 2}
   spacing: 1
-  roadWidth: 1
+  roadWidth: 8
   camera: {fileID: 963194227}
 --- !u!1001 &2637372971519288686
 PrefabInstance:
