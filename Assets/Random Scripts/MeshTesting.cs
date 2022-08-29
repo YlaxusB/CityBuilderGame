@@ -194,16 +194,18 @@ public class MeshTesting : MonoBehaviour
 
         Vector2 firstPoint = bezierPoints[0];
         Vector2 midPoint = bezierPoints[(bezierPoints.Length - 1) / 2];
+        Vector2 semiLast = bezierPoints[bezierPoints.Length - 2];
         Vector2 lastPoint = bezierPoints[bezierPoints.Length - 1];
         GameObject a = new GameObject("a");
-        a.transform.SetParent(road.transform);
-        a.transform.position = new Vector3(lastPoint.x, 1.6f, lastPoint.y);
-        a.transform.localRotation = Quaternion.Euler(lastPoint);
+        //a.transform.SetParent(road.transform);
+        a.transform.position = new Vector3(semiLast.x, 1.6f, semiLast.y);
         Vector2 eita = midPoint + (lastPoint - firstPoint);
         float anglea = -Mathf.Atan2(lastPoint.y - midPoint.y, lastPoint.x - midPoint.x) * (180 / Mathf.PI);
         float angleb = -Mathf.Atan2(midPoint.y - firstPoint.y, midPoint.x - firstPoint.x) * (180 / Mathf.PI);
         float anglec = -Mathf.Atan2(lastPoint.y - firstPoint.y, lastPoint.x - firstPoint.x) * (180 / Mathf.PI);
+        float angled = -Mathf.Atan2(lastPoint.y - semiLast.y, lastPoint.x - semiLast.x) * (180 / Mathf.PI);
         float angle = -Mathf.Atan2(lastPoint.y - eita.y, lastPoint.x - eita.x) * (180 / Mathf.PI);
+        a.transform.rotation = Quaternion.Euler(0, angled, 0);
         Debug.Log(firstPoint + "\n" + lastPoint);
         Debug.Log(eita + "\n" + lastPoint + "\n" + angle);
 
@@ -211,7 +213,7 @@ public class MeshTesting : MonoBehaviour
         //a.transform.rotation = Quaternion.Euler(-a.transform.forward);
         GameObject b = new GameObject("b");
         b.transform.SetParent(a.transform);
-        b.transform.localPosition = new Vector3(100f, 0, 0);
+        b.transform.localPosition = new Vector3(Vector3.Distance(firstPoint, lastPoint), 0, 0);
         points = new List<Vector3> { new Vector3(lastPoint.x, 0, lastPoint.y), new Vector3(b.transform.position.x, 1.6f, b.transform.position.z) };
         //Destroy(a);
         //Destroy(b);
