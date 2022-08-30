@@ -7,6 +7,7 @@ public class CreateRoad : MonoBehaviour
 {
     void Start()
     {
+        Debug.Log("eae");
     }
 
 }
