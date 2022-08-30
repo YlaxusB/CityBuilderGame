@@ -28,6 +28,7 @@ public class MeshTesting : MonoBehaviour
     GameObject gameObject;
     GameObject straightGameObject;
     bool continuation = false;
+    float roadAngle;
     void Update()
     {
         if (canRun)
@@ -113,8 +114,21 @@ public class MeshTesting : MonoBehaviour
     // Update the mesh
     Mesh updateCurvedMesh(Mesh mesh)
     {
-        Vector2[] bezierPoints = GetCurvedPoints(new Vector3[] { points[0], points[1], raycast(camera) }, 0.01f).ToArray();
-        mesh = CreateRoadMesh(bezierPoints);
+        List<Vector2> bezierPoints = new List<Vector2>();
+        if (continuation)
+        {
+            Vector2 startPosition = new Vector2(points[0].x, points[0].z);
+            Vector2 mousePoint = Vector3To2(raycast(camera));
+            GameObject b = GameObject.Find("b");
+            b.transform.localPosition = new Vector3((mousePoint.x - startPosition.x) / 2, 0, (mousePoint.y - startPosition.y) / 2);
+
+            Vector3 midPosition = new Vector3(startPosition.x + ((mousePoint.x - startPosition.x) / 2), 1.6f, startPosition.y + ((mousePoint.y - startPosition.y) / 2 ));
+            bezierPoints = GetCurvedPoints(new Vector3[] { startPosition, midPosition, raycast(camera) }, 0.01f);
+        } else
+        {
+            bezierPoints = GetCurvedPoints(new Vector3[] { points[0], points[1], raycast(camera) }, 0.01f);
+        }
+        mesh = CreateRoadMesh(bezierPoints.ToArray());
         return mesh;
     }
 
@@ -182,6 +196,8 @@ public class MeshTesting : MonoBehaviour
     // Create an empty object with the mesh
     void CreateRoad()
     {
+        Destroy(GameObject.Find("a"));
+        Destroy(GameObject.Find("b"));
         GameObject road = new GameObject("Road", typeof(MeshFilter), typeof(MeshRenderer));
 
         Vector2[] bezierPoints = GetCurvedPoints(points.ToArray(), 0.01f).ToArray();
@@ -193,18 +209,21 @@ public class MeshTesting : MonoBehaviour
         road.transform.rotation = Quaternion.Euler(90, 0, 0);
 
         Vector2 firstPoint = bezierPoints[0];
+        Vector2 beforeMidPoint = bezierPoints[((bezierPoints.Length - 1) / 2) - 1];
         Vector2 midPoint = bezierPoints[(bezierPoints.Length - 1) / 2];
         Vector2 semiLast = bezierPoints[bezierPoints.Length - 2];
         Vector2 lastPoint = bezierPoints[bezierPoints.Length - 1];
         GameObject a = new GameObject("a");
         //a.transform.SetParent(road.transform);
-        a.transform.position = new Vector3(semiLast.x, 1.6f, semiLast.y);
+
+        a.transform.position = new Vector3(lastPoint.x, 1.6f, lastPoint.y);
         Vector2 eita = midPoint + (lastPoint - firstPoint);
         float anglea = -Mathf.Atan2(lastPoint.y - midPoint.y, lastPoint.x - midPoint.x) * (180 / Mathf.PI);
         float angleb = -Mathf.Atan2(midPoint.y - firstPoint.y, midPoint.x - firstPoint.x) * (180 / Mathf.PI);
         float anglec = -Mathf.Atan2(lastPoint.y - firstPoint.y, lastPoint.x - firstPoint.x) * (180 / Mathf.PI);
         float angled = -Mathf.Atan2(lastPoint.y - semiLast.y, lastPoint.x - semiLast.x) * (180 / Mathf.PI);
         float angle = -Mathf.Atan2(lastPoint.y - eita.y, lastPoint.x - eita.x) * (180 / Mathf.PI);
+        roadAngle = angled;
         a.transform.rotation = Quaternion.Euler(0, angled, 0);
         Debug.Log(firstPoint + "\n" + lastPoint);
         Debug.Log(eita + "\n" + lastPoint + "\n" + angle);
@@ -213,10 +232,8 @@ public class MeshTesting : MonoBehaviour
         //a.transform.rotation = Quaternion.Euler(-a.transform.forward);
         GameObject b = new GameObject("b");
         b.transform.SetParent(a.transform);
-        b.transform.localPosition = new Vector3(Vector3.Distance(firstPoint, lastPoint), 0, 0);
-        points = new List<Vector3> { new Vector3(lastPoint.x, 0, lastPoint.y), new Vector3(b.transform.position.x, 1.6f, b.transform.position.z) };
-        //Destroy(a);
-        //Destroy(b);
+        b.transform.localPosition = new Vector3(Vector2.Distance(lastPoint, new Vector2(raycast(camera).x, raycast(camera).z)), 0, 0);
+        points = new List<Vector3> { new Vector3(lastPoint.x, 0, lastPoint.y), new Vector3(b.transform.position.x, 1.6f, b.transform.position.z)};
         Debug.Log(points.Count);
         continuation = true;
         canRunStraightPreview = false;

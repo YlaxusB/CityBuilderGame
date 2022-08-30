@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="Screen" style="width: 100%; height: 100%; left: 0; top: 0; right: 0; bottom: 0; align-items: center;">
+        <ui:VisualElement name="MainUI" style="width: 80%; height: 50px; left: 0; top: 90%; right: 10%; bottom: 0; align-items: center; justify-content: center; background-color: rgba(75, 75, 75, 0.64);">
+            <ui:Button text="Roads" display-tooltip-when-elided="true" name="ButtonRoads" style="width: 50px; height: 50px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="CustomUI" style="width: 60%; height: 135px; flex-direction: row; left: 0; top: 60%; display: flex; visibility: hidden; background-color: rgb(75, 75, 75);">
+            <ui:GroupBox name="CustomContents" style="width: 100%; height: 100%; left: 0; display: flex; visibility: visible;">
+                <ui:GroupBox name="TopButtons" style="height: 20%; width: 100%; left: 0; top: 0; right: 0; visibility: visible;" />
+                <ui:ScrollView name="CustomList" mode="Horizontal" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Auto" style="width: 100%; height: 80%; flex-direction: column-reverse; justify-content: flex-start; visibility: visible; align-items: center; flex-wrap: nowrap;" />
+            </ui:GroupBox>
+            <ui:GroupBox name="DivExtraButtonsHolder" style="align-items: auto; justify-content: flex-start; flex-direction: column-reverse; flex-wrap: nowrap; left: 0; width: 10%; visibility: visible;">
+                <ui:Button text="Button" display-tooltip-when-elided="true" />
+            </ui:GroupBox>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
