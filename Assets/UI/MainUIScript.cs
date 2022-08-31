@@ -12,7 +12,18 @@ public class MainUIScript : MonoBehaviour
         VisualElement rootVisualElement = GetComponent<UIDocument>().rootVisualElement; // basically the body of a html page
 
         // Assign the buttons their functions
+        BlockRaycasts();
         AssignButtonFunctions();
+    }
+
+    // Block raycasts through ui
+    private void BlockRaycasts()
+    {
+        VisualElement rootVisualElement = GetComponent<UIDocument>().rootVisualElement;
+        VisualElement mainUI = rootVisualElement.Q<VisualElement>("MainUI");
+        VisualElement customUI = rootVisualElement.Q<VisualElement>("CustomUI");
+        UIToolkitRaycastChecker.RegisterBlockingElement(mainUI);
+        UIToolkitRaycastChecker.RegisterBlockingElement(customUI);
     }
 
     /* -------- Assign functions to buttons -------- */
@@ -21,6 +32,7 @@ public class MainUIScript : MonoBehaviour
         VisualElement rootVisualElement = GetComponent<UIDocument>().rootVisualElement; // basically the body of a html page
         Button buttonRoads = rootVisualElement.Q<Button>("ButtonRoads");
         // Roads
+        buttonRoads.CaptureMouse();
         buttonRoads.RegisterCallback<ClickEvent>(Event => OpenCustomUI());
         buttonRoads.RegisterCallback<ClickEvent>(Event => InsertRoadsIntoCustomUI());
     }
@@ -88,19 +100,30 @@ public class MainUIScript : MonoBehaviour
                 img.style.width = new StyleLength(80);
                 img.style.height = new StyleLength(80);
                 img.style.paddingRight = new StyleLength(10);
-                img.RegisterCallback<ClickEvent>(Event => CreateRoad(roadProperties.roadWidth, roadProperties.roadLanes,
-                    roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial));
+                img.RegisterCallback<ClickEvent>(Event => startRoad(roadProperties.roadWidth, roadProperties.roadLanes,
+                    roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, road.name, road));
                 scrollView.Add(img);
             }
         }
     }
 
-    private void CreateRoad(float roadWidth, float roadLanes, bool oneWay, Texture roadTexture, Material roadMaterial)
+    private void startRoad(float roadWidth, float roadLanes, bool oneWay, Texture roadTexture, Material roadMaterial, string roadName, Transform contentRoad)
     {
-        Debug.Log(roadWidth);
-        Debug.Log(roadLanes);
-        Debug.Log(oneWay);
-        Debug.Log(roadTexture);
-        Debug.Log(roadMaterial);
+        Debug.Log("started");
+        Hands handsOnMainUI = GameObject.Find("Main Camera").GetComponent<Hands>();
+        Debug.Log((handsOnMainUI.buildingOnHand == "").ToString());
+        if(handsOnMainUI.buildingOnHand == "")
+        {
+            Debug.Log("added");
+            GetRoad road = new GetRoad();
+            Debug.Log(road.roadWidth);
+            road.roadWidth = roadWidth;
+            road.roadLanes = roadLanes;
+            road.oneWay = oneWay;
+            road.roadTexture = roadTexture;
+            road.roadMaterial = roadMaterial;
+            contentRoad.gameObject.AddComponent(road.GetType());
+            Debug.Log(road.roadWidth);
+        }
     }
 }

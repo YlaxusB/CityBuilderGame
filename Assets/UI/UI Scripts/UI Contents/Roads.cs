@@ -13,9 +13,4 @@ public class Roads : MonoBehaviour
 
     public Texture roadTexture;
     public Material roadMaterial;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 }

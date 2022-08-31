@@ -278,6 +278,7 @@ GameObject:
   - component: {fileID: 161229754}
   - component: {fileID: 161229753}
   - component: {fileID: 161229752}
+  - component: {fileID: 161229756}
   m_Layer: 0
   m_Name: Plane
   m_TagString: Untagged
@@ -364,6 +365,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &161229756
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 161229751}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfb46ffb309c9ed48b7b73b6901aa6b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &351651717
 GameObject:
   m_ObjectHideFlags: 0
@@ -410,7 +423,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roadWidth: 6
   roadLanes: 1
-  oneWay: 1
+  oneWay: 0
   roadTexture: {fileID: 2800000, guid: 9872e20c74fbd704e8d364f16b793695, type: 3}
   roadMaterial: {fileID: 2100000, guid: 6be55170a0311b144956792528a2c086, type: 2}
 --- !u!1 &480101412
@@ -705,6 +718,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54670ae73587dbd4aab55de0da4f889e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  buildingOnHand: 
 --- !u!1 &1367066530
 GameObject:
   m_ObjectHideFlags: 0
