@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 
 public class CameraScript : MonoBehaviour
 {
@@ -11,7 +13,7 @@ public class CameraScript : MonoBehaviour
         turn.y = -Camera.rotation.eulerAngles.x;
         cameraPosition = Camera.localPosition;
     }
-
+    
     public Transform Camera;
     public Vector3 cameraPosition;
     public Vector3 turn;

@@ -135,6 +135,7 @@ GameObject:
   - component: {fileID: 79747986}
   - component: {fileID: 79747985}
   - component: {fileID: 79747984}
+  - component: {fileID: 79747988}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -220,6 +221,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &79747988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 79747983}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b97bb8928c84a7478aa514db55037db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &105831558
 GameObject:
   m_ObjectHideFlags: 0
@@ -586,6 +599,7 @@ GameObject:
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
   - component: {fileID: 963194229}
+  - component: {fileID: 963194230}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -679,6 +693,18 @@ MonoBehaviour:
   forwardSensivity: 3
   rightSensivity: 3
   upSensivity: 1.5
+--- !u!114 &963194230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54670ae73587dbd4aab55de0da4f889e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1367066530
 GameObject:
   m_ObjectHideFlags: 0

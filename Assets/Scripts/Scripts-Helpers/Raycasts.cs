@@ -1,4 +1,8 @@
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
+
 namespace CustomHelper
 {
     public static class Raycasts
@@ -36,5 +40,19 @@ namespace CustomHelper
                 return new Vector3(0, 0, 0);
             }
         }
+
+        // Check if the mouse is not over a UI
+        /*
+        public static bool isMouseOverUI()
+        {
+            GraphicRaycaster m_Raycaster;
+            PointerEventData m_PointerEventData;
+            EventSystem m_EventSystem;
+
+            //Fetch the Raycaster from the GameObject (the Canvas)
+            m_Raycaster = GetComponent<GraphicRaycaster>();
+            //Fetch the Event System from the Scene
+            m_EventSystem = GetComponent<EventSystem>();
+        }*/
     }
 }

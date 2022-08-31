@@ -8,6 +8,7 @@ public class MainUIScript : MonoBehaviour
 {
     private void OnEnable()
     {
+        
         VisualElement rootVisualElement = GetComponent<UIDocument>().rootVisualElement; // basically the body of a html page
 
         // Assign the buttons their functions
