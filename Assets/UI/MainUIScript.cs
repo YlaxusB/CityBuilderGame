@@ -114,16 +114,20 @@ public class MainUIScript : MonoBehaviour
         Debug.Log((handsOnMainUI.buildingOnHand == "").ToString());
         if(handsOnMainUI.buildingOnHand == "")
         {
+            
+            GetRoad roadComponent = contentRoad.gameObject.AddComponent<GetRoad>();
             Debug.Log("added");
-            GetRoad road = new GetRoad();
-            Debug.Log(road.roadWidth);
-            road.roadWidth = roadWidth;
-            road.roadLanes = roadLanes;
-            road.oneWay = oneWay;
-            road.roadTexture = roadTexture;
-            road.roadMaterial = roadMaterial;
-            contentRoad.gameObject.AddComponent(road.GetType());
-            Debug.Log(road.roadWidth);
+            
+            Debug.Log(roadComponent.roadWidth);
+            roadComponent.roadWidth = roadWidth;
+            roadComponent.roadLanes = roadLanes;
+            roadComponent.oneWay = oneWay;
+            roadComponent.roadTexture = roadTexture;
+            roadComponent.roadMaterial = roadMaterial;
+            roadComponent.roadName = name;
+            
+            Debug.Log(roadComponent.roadWidth);
+            
         }
     }
 }
