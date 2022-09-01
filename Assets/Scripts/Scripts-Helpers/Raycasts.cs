@@ -41,6 +41,26 @@ namespace CustomHelper
             }
         }
 
+        /// <summary>
+        /// Raycast only in the specified layer
+        /// </summary>
+        public static Vector3 raycastLayer(Camera camera, string layerName)
+        {
+            RaycastHit hit;
+            Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+            int layerMask = LayerMask.GetMask(layerName);
+
+            if (Physics.Raycast(ray, out hit, 1000, layerMask))
+            {
+                Transform objectHit = hit.transform;
+                return new Vector3(hit.point.x, hit.point.y, hit.point.z);
+            }
+            else
+            {
+                return new Vector3(0, 0, 0);
+            }
+        }
+
         // Check if the mouse is not over a UI
         /*
         public static bool isMouseOverUI()

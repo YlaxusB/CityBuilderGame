@@ -8,7 +8,7 @@ public class MainUIScript : MonoBehaviour
 {
     private void OnEnable()
     {
-        
+
         VisualElement rootVisualElement = GetComponent<UIDocument>().rootVisualElement; // basically the body of a html page
 
         // Assign the buttons their functions
@@ -100,34 +100,46 @@ public class MainUIScript : MonoBehaviour
                 img.style.width = new StyleLength(80);
                 img.style.height = new StyleLength(80);
                 img.style.paddingRight = new StyleLength(10);
-                img.RegisterCallback<ClickEvent>(Event => startRoad(roadProperties.roadWidth, roadProperties.roadLanes,
-                    roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, road.name, road));
+                img.RegisterCallback<ClickEvent>(Event =>
+                {
+                    if(GameObject.Find("Main Camera").GetComponent<Hands>().buildingOnHand != "")
+                    {
+                        Debug.Log("Já havia uma construção, era : " + GameObject.Find("Main Camera").GetComponent<Hands>().buildingOnHand);
+                        Hands.clearHands(GameObject.Find("Main Camera").GetComponent<Hands>().buildingOnHand);
+                        startRoad(roadProperties.roadWidth, ((int)roadProperties.roadLanes),
+                        roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, road.name, road);
+                    } else
+                    {
+                        Debug.Log("Não havia nenhuma construção");
+                        startRoad(roadProperties.roadWidth, ((int)roadProperties.roadLanes),
+                        roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, road.name, road);
+                    }
+                });
+               // img.RegisterCallback<ClickEvent>(Event => startRoad(roadProperties.roadWidth, ((int)roadProperties.roadLanes),
+               //     roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, road.name, road));
                 scrollView.Add(img);
             }
         }
     }
 
-    private void startRoad(float roadWidth, float roadLanes, bool oneWay, Texture roadTexture, Material roadMaterial, string roadName, Transform contentRoad)
+    private void startRoad(float roadWidth, int roadLanes, bool oneWay, Texture roadTexture, Material roadMaterial, string roadName, Transform contentRoad)
     {
-        Debug.Log("started");
-        Hands handsOnMainUI = GameObject.Find("Main Camera").GetComponent<Hands>();
-        Debug.Log((handsOnMainUI.buildingOnHand == "").ToString());
-        if(handsOnMainUI.buildingOnHand == "")
+        Hands handsOnMainCamera = GameObject.Find("Main Camera").GetComponent<Hands>();
+        if (handsOnMainCamera.buildingOnHand == "")
         {
-            
+
             GetRoad roadComponent = contentRoad.gameObject.AddComponent<GetRoad>();
-            Debug.Log("added");
-            
+
             Debug.Log(roadComponent.roadWidth);
             roadComponent.roadWidth = roadWidth;
             roadComponent.roadLanes = roadLanes;
             roadComponent.oneWay = oneWay;
             roadComponent.roadTexture = roadTexture;
             roadComponent.roadMaterial = roadMaterial;
-            roadComponent.roadName = name;
-            
+            roadComponent.roadName = roadName;
+
             Debug.Log(roadComponent.roadWidth);
-            
+
         }
     }
 }
