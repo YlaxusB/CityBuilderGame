@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.InputSystem;
+using System.Linq;
 
 using CustomHelper;
 using RoadsMeshCreator;
@@ -36,6 +37,7 @@ public class GetRoad : MonoBehaviour
         // When left click on any place that is not ui
         if (Input.GetButtonDown("Fire1") && !UIToolkitRaycastChecker.IsPointerOverUI())
         {
+
             if (points.Count == 1) { StraightPreview(); }
             else if (points.Count == 2) { CurvedPreview(); }
         }
@@ -55,11 +57,17 @@ public class GetRoad : MonoBehaviour
         }
     }
 
+    public void terrainClicked()
+    {
+
+    }
+
     // Pre Preview (The preview when you choose road but not clicked on a point yet)
     void CreatePrePreview()
     {
         // Create the initial plane
         GameObject previewRoad = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        previewRoad.transform.position = Raycasts.raycastLayer(camera, "Terrain") + new Vector3(0, height, 0);
         previewRoad.name = "Pre Preview Road";
 
         // Material and textures
@@ -70,14 +78,13 @@ public class GetRoad : MonoBehaviour
 
         // Mesh
         MeshFilter roadMeshFilter = previewRoad.GetComponent<MeshFilter>();
-        foreach(Vector3 a in roadMeshFilter.mesh.vertices)
-        {
-            Debug.Log(a);
-        }
-        roadMeshFilter.mesh = RoadMesh.CreatePrePreviewMesh(previewRoad, Vector3Extensions.ToVector2(CustomHelper.Raycasts.raycastLayer(camera, "Terrain")), roadWidth);
-        previewRoad.transform.rotation = Quaternion.Euler(90, 0, 0);
+
+        roadMeshFilter.mesh = RoadMesh.CreatePrePreviewMesh(previewRoad, Vector3Extensions.ToVector2(Raycasts.raycastLayer(camera, "Terrain")), roadWidth);
         // Add this plane to preview roads "folder" and start the update preview that runs each game update
         previewRoad.transform.parent = GameObject.Find("Preview Roads").transform;
+
+        //sphere.transform.position = Vector3Extensions.ToVector2(CustomHelper.Raycasts.raycastLayer(camera, "Terrain"));
+
         StartCoroutine(UpdatePrePreview(previewRoad));
     }
 
@@ -88,15 +95,20 @@ public class GetRoad : MonoBehaviour
         while (canRun)
         {
             // If player right click or left click then destroy this preview
-            if (Input.GetButtonDown("Fire2") && !UIToolkitRaycastChecker.IsPointerOverUI() ||
-                Input.GetButtonDown("Fire1") && !UIToolkitRaycastChecker.IsPointerOverUI())
+            if (Input.GetButtonDown("Fire1") && !UIToolkitRaycastChecker.IsPointerOverUI())
+            {
+                Hands.clearHands(roadName);
+                Destroy(road);
+                yield break;
+            }
+            if (Input.GetButtonDown("Fire2") && !UIToolkitRaycastChecker.IsPointerOverUI())
             {
                 Hands.clearHands(roadName);
                 Destroy(road);
                 yield break;
             }
             // Set the position of preview to follow mouse
-            road.transform.position = CustomHelper.Raycasts.raycastLayer(camera, "Terrain") + new Vector3(0, height, 0);
+            road.transform.position = Raycasts.raycastLayer(camera, "Terrain") + new Vector3(0, height, 0);
             yield return null;
         }
     }
