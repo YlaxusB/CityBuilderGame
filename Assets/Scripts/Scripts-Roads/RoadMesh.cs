@@ -14,74 +14,27 @@ namespace RoadsMeshCreator
 
         public static Mesh CreatePrePreviewMesh(GameObject road, Vector2 initialPoint, float roadWidth)
         {
-            // Make game objects, mid is mouse position, others are just a distance (road width) from cente
-            roadWidth /= 2;
-            GameObject midObject = new GameObject("Mid");
-            midObject.transform.SetParent(road.transform);
-            midObject.transform.localPosition = new Vector3(0, 0, 0);
-            Vector3 mid = midObject.transform.position;
-            Vector3 lMid = midObject.transform.localPosition;
-
-            GameObject frontObject = new GameObject("Front");
-            frontObject.transform.SetParent(road.transform);
-            frontObject.transform.localPosition = new Vector3(roadWidth, 0, 0);
-            Vector3 lfront = frontObject.transform.localPosition;
-
-            GameObject backObject = new GameObject("Back");
-            backObject.transform.SetParent(road.transform);
-            backObject.transform.localPosition = new Vector3(-roadWidth, 0, 0);
-            Vector3 lBack = backObject.transform.localPosition;
-
-            GameObject RightObject = new GameObject("Right");
-            RightObject.transform.SetParent(road.transform);
-            RightObject.transform.localPosition = new Vector3(0, 0, -roadWidth);
-            Vector3 lRight = RightObject.transform.localPosition;
-
-            GameObject leftObject = new GameObject("Left");
-            leftObject.transform.SetParent(road.transform);
-            leftObject.transform.localPosition = new Vector3(0, 0, roadWidth);
-            Vector3 lLeft = leftObject.transform.localPosition;
-
-            // Gameobject with same x than front and z/y than right
-            GameObject rightFront = new GameObject("Curve", typeof(MeshFilter), typeof(MeshRenderer));
-            rightFront.transform.SetParent(road.transform);
-            rightFront.transform.localPosition = lRight + lfront;
-
-
-            /* Make a circle using bezier curves */
             List<Vector3> points = new List<Vector3>();
-            // Right to front curve
-            for (double t = 0; t < 1; t += 0.1)
-            {
-                points.Add(BezierCurves.Quadratic(((float)t), lRight, rightFront.transform.localPosition, lfront));
-                Debug.Log(points[points.Count - 1]);
-            }
 
-            // Front to left curve
-            for (double t = 0; t < 1; t += 0.1)
-            {
-                points.Add(BezierCurves.Quadratic(((float)t), lfront, lfront + lLeft, lLeft));
-                Debug.Log(points[points.Count - 1]);
-            }
+            Vector3 A = new Vector3(0, 0, 0);
+            Vector3 B = new Vector3(0, 0, -roadWidth);
+            Vector3 C = new Vector3(roadWidth, 0, 0);
+            Vector3 D = new Vector3(0, 0, -roadWidth);
 
-            // Left to back curve
-            for (double t = 0; t < 1; t += 0.1)
-            {
-                points.Add(BezierCurves.Quadratic(((float)t), -lRight, -rightFront.transform.localPosition, -lfront));
-                Debug.Log(points[points.Count - 1]);
-            }
-            points.Add(lBack);
 
-            // Back to Right curve
-            for (double t = 0; t < 1; t += 0.1)
+
+            for (float i = 0; i <= 10; i++)
             {
-                points.Add(BezierCurves.Quadratic(((float)t), -lfront, -lfront + -lLeft, -lLeft));
-                Debug.Log(points[points.Count - 1]);
+                points.Add(D);
+                float r = roadWidth;
+                float t = Mathf.Pow(D.x, 2) + Mathf.Pow(D.z, 2);
+                float cos = D.x / r;
+                float sin = D.z / r;
+                D.z = cos * r;
+                D.x = sin * r;
             }
 
             /* End of circle creation */
-
-
 
             List<Vector3> verts = new List<Vector3>();
             List<int> triangles = new List<int>();
@@ -92,11 +45,9 @@ namespace RoadsMeshCreator
                 verts.Add(new Vector3(points[i].x, points[i].y, points[i].z));
             }
 
-            //verts.Add(lLeft);
-            verts.Add(lRight);
 
             // Make triangles, going from index, to 0, to index + 1
-            for (int i = 1; i < points.Count; i++)
+            for (int i = 1; i < points.Count - 1; i++)
             {
                 triangles.Add(i);
                 triangles.Add(0);
@@ -105,8 +56,8 @@ namespace RoadsMeshCreator
             /*
             triangles.Add(triangles.Count - 1);
             triangles.Add(0);
-            triangles.Add(1);*/
-
+            triangles.Add(1);
+            */
             List<Vector2> uvs = new List<Vector2>();
             foreach (Vector3 point in verts)
             {
