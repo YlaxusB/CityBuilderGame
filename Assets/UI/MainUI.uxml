@@ -8,8 +8,12 @@
                 <ui:GroupBox name="TopButtons" style="height: 20%; width: 100%; left: 0; top: 0; right: 0; visibility: visible;" />
                 <ui:ScrollView name="CustomList" mode="Horizontal" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Auto" style="width: 100%; height: 80%; flex-direction: column-reverse; justify-content: flex-start; visibility: visible; align-items: center; flex-wrap: nowrap;" />
             </ui:GroupBox>
-            <ui:VisualElement name="ButtonsHolder" style="width: 10%; height: 100%; overflow: hidden;">
-                <ui:Button text="Button" display-tooltip-when-elided="true" />
+            <ui:VisualElement name="ButtonsHolder" style="width: 10%; height: 100%; overflow: hidden; font-size: 8px;">
+                <ui:VisualElement name="RoadsExtraButtons" style="position: absolute; width: 100%; height: 100%; font-size: 12px;">
+                    <ui:Toggle label="Straight" name="StraightTrigger" value="false" focusable="false" />
+                    <ui:Toggle label="Bezier" name="BezierTrigger" focusable="false" />
+                    <ui:Toggle label="Biarc" name="BiarcTrigger" focusable="false" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
