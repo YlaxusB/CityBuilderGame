@@ -1,0 +1,19 @@
+{
+    "name": "Roads",
+    "rootNamespace": "",
+    "references": [
+        "GUID:fd6866ed584dcd6419285d2d10f2ea69",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:9f5fcd2f345ef434cad7361682ca99e3",
+        "GUID:e4c7ba189942b774cbb105754bdf92d5"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

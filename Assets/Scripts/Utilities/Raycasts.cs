@@ -74,5 +74,29 @@ namespace CustomHelper
             //Fetch the Event System from the Scene
             m_EventSystem = GetComponent<EventSystem>();
         }*/
+
+        // Check if mouse is over terrain
+        public static bool isMouseOverLayer(Camera camera, string layerName)
+        {
+            RaycastHit hit;
+            Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+            int layerMask = LayerMask.GetMask(layerName);
+
+            if (Physics.Raycast(ray, out hit, 1000))
+            {
+                if (LayerMask.LayerToName(hit.collider.gameObject.layer) == layerName)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

@@ -13,13 +13,10 @@ public class Hands : MonoBehaviour
         Debug.Log(UIToolkitRaycastChecker.IsPointerOverUI());
     }
     */
-    public static void clearHands(string buildingName)
+    public static void clearHands(Component component)
     {
-        Debug.Log(buildingName);
         GameObject.Find("Main Camera").GetComponent<Hands>().buildingOnHand = new string("");
-        Destroy(GameObject.Find(buildingName).GetComponent<GetRoad>());
-        Debug.Log("Cleared Hands");
-        Debug.Log("Current Building on Hand : " + GameObject.Find("Main Camera").GetComponent<Hands>().buildingOnHand);
+        Destroy(component);
     }
 }
 

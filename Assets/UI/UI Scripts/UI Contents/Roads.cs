@@ -13,4 +13,6 @@ public class Roads : MonoBehaviour
 
     public Texture roadTexture;
     public Material roadMaterial;
+    public Material roadPreviewMaterial;
+    public Material roadObstructedMaterial;
 }

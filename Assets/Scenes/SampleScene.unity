@@ -457,6 +457,8 @@ MonoBehaviour:
   oneWay: 0
   roadTexture: {fileID: 2800000, guid: 9872e20c74fbd704e8d364f16b793695, type: 3}
   roadMaterial: {fileID: 2100000, guid: 6be55170a0311b144956792528a2c086, type: 2}
+  roadPreviewMaterial: {fileID: 2100000, guid: ee4b85991188bee44aeef3bec653720e, type: 2}
+  roadObstructedMaterial: {fileID: 2100000, guid: c10db7bc29656b64598308d948adbf5c, type: 2}
 --- !u!1 &480101412
 GameObject:
   m_ObjectHideFlags: 0
@@ -1001,6 +1003,8 @@ MonoBehaviour:
   oneWay: 0
   roadTexture: {fileID: 2800000, guid: 9872e20c74fbd704e8d364f16b793695, type: 3}
   roadMaterial: {fileID: 2100000, guid: 6be55170a0311b144956792528a2c086, type: 2}
+  roadPreviewMaterial: {fileID: 2100000, guid: ee4b85991188bee44aeef3bec653720e, type: 2}
+  roadObstructedMaterial: {fileID: 2100000, guid: c10db7bc29656b64598308d948adbf5c, type: 2}
 --- !u!1 &1434739944
 GameObject:
   m_ObjectHideFlags: 0

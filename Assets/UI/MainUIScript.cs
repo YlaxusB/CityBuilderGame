@@ -105,14 +105,14 @@ public class MainUIScript : MonoBehaviour
                     if(GameObject.Find("Main Camera").GetComponent<Hands>().buildingOnHand != "")
                     {
                         Debug.Log("Já havia uma construção, era : " + GameObject.Find("Main Camera").GetComponent<Hands>().buildingOnHand);
-                        Hands.clearHands(GameObject.Find("Main Camera").GetComponent<Hands>().buildingOnHand);
+                        Hands.clearHands(GameObject.Find("Main Camera").GetComponent<Hands>());
                         startRoad(roadProperties.roadWidth, ((int)roadProperties.roadLanes),
-                        roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, road.name, road);
+                        roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, roadProperties.roadPreviewMaterial, roadProperties.roadObstructedMaterial, road.name, road);
                     } else
                     {
                         Debug.Log("Não havia nenhuma construção");
                         startRoad(roadProperties.roadWidth, ((int)roadProperties.roadLanes),
-                        roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, road.name, road);
+                        roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, roadProperties.roadPreviewMaterial, roadProperties.roadObstructedMaterial, road.name, road);
                     }
                 });
                // img.RegisterCallback<ClickEvent>(Event => startRoad(roadProperties.roadWidth, ((int)roadProperties.roadLanes),
@@ -122,24 +122,20 @@ public class MainUIScript : MonoBehaviour
         }
     }
 
-    private void startRoad(float roadWidth, int roadLanes, bool oneWay, Texture roadTexture, Material roadMaterial, string roadName, Transform contentRoad)
+    private void startRoad(float roadWidth, int roadLanes, bool oneWay, Texture roadTexture, Material roadMaterial, Material roadPreviewMaterial, Material roadObstructedMaterial, string roadName, Transform contentRoad)
     {
         Hands handsOnMainCamera = GameObject.Find("Main Camera").GetComponent<Hands>();
         if (handsOnMainCamera.buildingOnHand == "")
         {
-
             GetRoad roadComponent = contentRoad.gameObject.AddComponent<GetRoad>();
-
-            Debug.Log(roadComponent.roadWidth);
             roadComponent.roadWidth = roadWidth;
             roadComponent.roadLanes = roadLanes;
             roadComponent.oneWay = oneWay;
             roadComponent.roadTexture = roadTexture;
             roadComponent.roadMaterial = roadMaterial;
             roadComponent.roadName = roadName;
-
-            Debug.Log(roadComponent.roadWidth);
-
+            roadComponent.roadPreviewMaterial = roadPreviewMaterial;
+            roadComponent.roadObstructedMaterial = roadObstructedMaterial;
         }
     }
 }
