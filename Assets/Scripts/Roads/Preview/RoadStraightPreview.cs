@@ -15,7 +15,7 @@ namespace Preview
         {
             // Create the initial plane
             GameObject previewRoad = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            previewRoad.transform.position = Raycasts.raycastLayer(roadProperties.camera, "Terrain") + new Vector3(0, roadProperties.height, 0);
+            previewRoad.transform.position = new Vector3(Mathf.Round(points[0].x), roadProperties.height, Mathf.Round(points[0].z)) ;//Raycasts.raycastLayer(roadProperties.camera, "Terrain") + new Vector3(0, roadProperties.height, 0);
             previewRoad.transform.rotation = Quaternion.Euler(180, 0, 0);
             previewRoad.name = "Straight Preview Road";
 
@@ -27,12 +27,14 @@ namespace Preview
             // Mesh
             MeshFilter roadMeshFilter = previewRoad.GetComponent<MeshFilter>();
             roadMeshFilter.mesh = RoadMesh.CreateStraightMesh(points[0],
-                Raycasts.raycastLayer(roadProperties.camera, "Terrain"), 0.1f, roadProperties.width);
+                Raycasts.raycastLayer(roadProperties.camera, "Terrain"), 0.1f, roadProperties.width, roadProperties).mesh;
+
+            // Collision System
+            previewRoad.AddComponent<PreviewColliderScript>();
 
             // Add this plane to preview roads "folder" and start the update preview that runs each game update
             previewRoad.transform.parent = GameObject.Find("Preview Roads").transform;
 
-            Debug.Log("Created Straight Preview");
             return previewRoad;
         }
 
@@ -42,14 +44,23 @@ namespace Preview
             while (canRun)
             {
                 MeshFilter roadMeshFilter = road.GetComponent<MeshFilter>();
-                Debug.Log("updating");
                 Vector3 endPosition = Raycasts.raycastPosition3D(roadProperties.camera);
                 // Update Mesh
                 roadMeshFilter.mesh = RoadMesh.CreateStraightMesh(points[0],
-                    endPosition, 0.1f, roadProperties.width);
-                float angle = -Mathf.Atan2(endPosition.z - points[0].z, endPosition.x - points[0].x) * (180 / Mathf.PI);
+                    endPosition, 0.1f, roadProperties.width, roadProperties).mesh;
+                float angle = -Mathf.Atan2(Mathf.Round(endPosition.z) - Mathf.Round(points[0].z),
+                    Mathf.Round(endPosition.x) - Mathf.Round(points[0].x)) * (180 / Mathf.PI);
                 road.transform.rotation = Quaternion.Euler(0, angle, 0);
                 //road.transform.ro
+
+                // Check colliding and create intersections
+                MeshCollider roadMeshCollider = road.GetComponent<MeshCollider>();
+                if(roadMeshFilter.mesh.vertexCount > 5)
+                {
+                    roadMeshCollider.sharedMesh = roadMeshFilter.mesh;
+                }
+                roadMeshCollider.convex = true;
+
                 yield return null;
             }
         }

@@ -21,14 +21,22 @@ public class GetRoad : MonoBehaviour
     public Material roadMaterial;
     public Material roadPreviewMaterial;
     public Material roadObstructedMaterial;
+
     public int maxPointsAmount;
     //public object roadProperties = new object();
     Camera camera;
-    public float height = 0.1f;
+    public float height = 0.2f;
 
     RoadProperties roadProperties = new RoadProperties();
     List<Vector3> points = new List<Vector3>();
     GameObject previewRoad;
+
+    string shape = "straight";
+    public void ChangeShape(string newShape)
+    {
+        shape = newShape;
+    }
+
     private void Start()
     {
         camera = GameObject.Find("Main Camera").GetComponent<Camera>();
@@ -65,16 +73,37 @@ public class GetRoad : MonoBehaviour
             Destroy(previewRoad);
             StopAllCoroutines();
             addPoint();
+
+            // if the player selected the straight shape and there are 2 points, then remove the old
+            // preview and create the final road
+            if (shape == "straight" && points.Count == 2)
+            {
+                CreateRoad.Straight(points, roadProperties);
+                Destroy(previewRoad);
+                points = new List<Vector3>() { points[1] };
+            }
+            else if (shape == "bezier" && points.Count == 3)
+            {
+                CreateRoad.Bezier(points, roadProperties);
+                Destroy(previewRoad);
+
+                //previewRoad = CurvedPreview.CreateBezierContinuation(roadProperties, points);
+                //StartCoroutine(CurvedPreview.UpdateBezierContinuation(previewRoad, roadProperties, points));
+                points = new List<Vector3>() { points[2] };
+            }
+
+            // Starts the preview based on how many times the player clicked
             if (points.Count == 1)
             {
+                // Straight
                 previewRoad = StraightPreview.Create(roadProperties, points);
                 StartCoroutine(StraightPreview.Update(previewRoad, roadProperties, points));
             }
             else if (points.Count == 2)
             {
-                Hands.clearHands(GameObject.Find(roadProperties.name).GetComponent<GetRoad>());
-                //previewRoad = CurvedPreview.Create(roadProperties, points);
-                // CurvedPreview.Update(previewRoad, roadProperties, points);
+                // Bezier
+                previewRoad = CurvedPreview.CreateBezier(roadProperties, points);
+                StartCoroutine(CurvedPreview.UpdateBezier(previewRoad, roadProperties, points));
             }
         }
         // When right click on any place that is not ui
@@ -83,9 +112,31 @@ public class GetRoad : MonoBehaviour
             // If there's no more points, then just remove the road from the hands
             if (points.Count == 0)
             {
+                // If there's no points then destroy the preview and clear hands
+                Destroy(previewRoad);
                 Hands.clearHands(GameObject.Find(roadName).GetComponent<GetRoad>());
             }
-            else if (points.Count > 0)
+            else if (points.Count == 1)
+            {
+                Debug.Log(1);
+                // If there's one point and user right clicked, then destroy the straight preview and create a pre preview
+                points.RemoveAt(points.Count - 1);
+                Destroy(previewRoad);
+                previewRoad = PrePreview.Create(roadProperties);
+                StartCoroutine(PrePreview.Update(previewRoad, roadProperties));
+            }
+            else if (points.Count == 2)
+            {
+                Debug.Log(2);
+                // If there's two points and user right clicked, then destroy the curved preview and create a straigt preview
+                Debug.Log(points[0]);
+                points = new List<Vector3>() { points[0] };
+                StopAllCoroutines();
+                Destroy(previewRoad);
+                previewRoad = StraightPreview.Create(roadProperties, points);
+                StartCoroutine(StraightPreview.Update(previewRoad, roadProperties, points));
+            }
+            else if (points.Count > 2)
             {
                 points.RemoveAt(points.Count - 1);
             }
@@ -99,7 +150,7 @@ public class GetRoad : MonoBehaviour
 }
 
 
-public class RoadProperties
+public class RoadProperties : MonoBehaviour
 {
     public string name;
     public float width;
@@ -112,4 +163,28 @@ public class RoadProperties
     public int maxPointsAmount;
     public Camera camera;
     public float height;
+
+    public Mesh mesh;
+    public List<Vector3> points;
+
+    public void ChangeProperties(RoadProperties roadProperties)
+    {
+        name = roadProperties.name;
+        width = roadProperties.width;
+        lanes = roadProperties.lanes;
+        oneWay = roadProperties.oneWay;
+        texture = roadProperties.texture;
+        material = roadProperties.material;
+        previewMaterial = roadProperties.previewMaterial;
+        obstructedMaterial = roadProperties.obstructedMaterial;
+        camera = roadProperties.camera;
+        height = roadProperties.height;
+
+        mesh = roadProperties.mesh;
+        points = roadProperties.points;
+    }
+    private void OnValidate()
+    {
+        
+    }
 }

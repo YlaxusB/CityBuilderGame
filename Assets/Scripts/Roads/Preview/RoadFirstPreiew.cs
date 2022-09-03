@@ -17,7 +17,6 @@ namespace Preview
             GameObject previewRoad = GameObject.CreatePrimitive(PrimitiveType.Plane);
             previewRoad.transform.position = Raycasts.raycastLayer(roadProperties.camera, "Terrain") + new Vector3(0, roadProperties.height, 0);
             previewRoad.transform.rotation = Quaternion.Euler(180, 0, 0);
-            previewRoad.name = "Pre Preview Road";
 
             // Material and textures
             MeshRenderer roadMeshRenderer = previewRoad.GetComponent<MeshRenderer>();
@@ -55,20 +54,10 @@ namespace Preview
                     meshRenderer.material.name = roadProperties.previewMaterial.name;
                 }
 
-                // If player right click or left click then destroy this preview (if left click then starts next preview)
-                if (Input.GetButtonDown("Fire1") && !UIToolkitRaycastChecker.IsPointerOverUI() && Raycasts.isMouseOverLayer(roadProperties.camera, "Terrain"))
-                {
 
-                    yield break;
-                }
-                if (Input.GetButtonDown("Fire2") && !UIToolkitRaycastChecker.IsPointerOverUI())
-                {
-                    //Hands.clearHands(GameObject.Find(roadProperties.name).GetComponent<GetRoad>());
-                    //Destroy(road);
-                    yield break;
-                }
                 // Set the position of preview to follow mouse
-                road.transform.position = Raycasts.raycastLayer(roadProperties.camera, "Terrain") + new Vector3(0, roadProperties.height, 0);
+                Vector3 endPosition = Raycasts.raycastLayer(roadProperties.camera, "Terrain") + new Vector3(0, roadProperties.height, 0);
+                road.transform.position = new Vector3(Mathf.Round(endPosition.x), endPosition.y, Mathf.Round(endPosition.z));
                 yield return null;
             }
         }

@@ -82,7 +82,7 @@ namespace CustomHelper
             Ray ray = camera.ScreenPointToRay(Input.mousePosition);
             int layerMask = LayerMask.GetMask(layerName);
 
-            if (Physics.Raycast(ray, out hit, 1000))
+            if (Physics.Raycast(ray, out hit, 1000, LayerMask.GetMask(layerName)))
             {
                 if (LayerMask.LayerToName(hit.collider.gameObject.layer) == layerName)
                 {
@@ -96,6 +96,30 @@ namespace CustomHelper
             else
             {
                 return false;
+            }
+        }
+
+        // Return the hitted object when mouse over layer
+        public static RaycastHit isMouseCollidingLayer(Camera camera, string layerName)
+        {
+            RaycastHit hit;
+            Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+            int layerMask = LayerMask.GetMask(layerName);
+
+            if (Physics.Raycast(ray, out hit, 1000))
+            {
+                if (LayerMask.LayerToName(hit.collider.gameObject.layer) == layerName)
+                {
+                    return hit;
+                }
+                else
+                {
+                    return new RaycastHit();
+                }
+            }
+            else
+            {
+                return new RaycastHit();
             }
         }
     }

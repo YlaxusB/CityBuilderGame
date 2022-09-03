@@ -65,12 +65,18 @@ namespace RoadsMeshCreator
             return mesh;
         }
     
-        public static Mesh CreateStraightMesh(Vector3 startPoint, Vector3 endPoint, float multiplier, float roadWidth)
+        public static RoadProperties CreateStraightMesh(Vector3 startPoint, Vector3 endPoint, float multiplier, float roadWidth, RoadProperties roadProperties)
         {
             List<Vector3> points = new List<Vector3>();
             Vector3 start = new Vector3(0, 0, 0);
             Vector3 end = new Vector3(Vector3.Distance(endPoint, startPoint), 0, 0);
             // Create the points, going from start to end
+
+            // Multiplier, each 5 cubes place 1 point, that will have two vertices
+            float distance = Vector3.Distance(startPoint, endPoint);
+            float desiredCubes = 5;
+            multiplier = Mathf.Clamp((1 / distance) * desiredCubes, 0.000001f, 0.2f);
+
             for (float t = 0; t < 1; t+= multiplier)
             {
                 points.Add(BezierCurves.Linear(t, start, end));
@@ -100,7 +106,7 @@ namespace RoadsMeshCreator
 
             // Create the triangles
             List<int> triangles = new List<int>();
-            for(int i = 0; i < (points.Count * 1.5f) + 2; i+= 2)
+            for(int i = 0; i < 2 *(points.Count - 1); i+= 2)
             {
                 triangles.Add(i);
                 triangles.Add(i + 2);
@@ -115,50 +121,150 @@ namespace RoadsMeshCreator
             mesh.vertices = verts.ToArray();
             mesh.triangles = triangles.ToArray();
             mesh.uv = uvs.ToArray();
+
+            roadProperties.mesh = mesh;
+            roadProperties.points = points;
+            return roadProperties;
+        }
+
+        public static Mesh CreateBezierMesh(Vector3 startPoint, Vector3 midPoint, Vector3 endPoint, float multiplier, float roadWidth)
+        {
+            List<Vector2> pointsList = new List<Vector2>();
+            Vector2 start = Vector3Extensions.ToVector2(startPoint);
+            Vector2 mid = Vector3Extensions.ToVector2(midPoint);
+            Vector2 end = Vector3Extensions.ToVector2(endPoint);
+            mid -= start;
+            end -= start;
+            start = new Vector2(0, 0);
+
+            for(float i = 0; i < 1; i+= multiplier)
+            {
+                pointsList.Add(BezierCurves.Quadratic(i, start, mid, end));
+            }
+
+            // Iterate to get the distance of startPoint and endPoint traveled by the road
+            float distance = 0;
+            for(int i = pointsList.Count - 1; i > 1; i--)
+            {
+                distance += Vector3.Distance(pointsList[i], pointsList[i - 1]);
+            }
+
+            Vector2[] points = pointsList.ToArray();
+            // vertices = 2 * number of points
+            // triangles = (2 * (number of points - 1) * 3) 
+            Vector3[] verts = new Vector3[points.Length * 2];
+            Vector2[] uvs = new Vector2[verts.Length];
+            int[] tris = new int[2 * (points.Length - 1) * 3];
+            int vertIndex = 0;
+            int triIndex = 0;
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                Vector2 forward = Vector2.zero;
+                if (i < points.Length - 1)
+                {
+                    forward += points[i + 1] - points[i];
+                }
+                if (i > 0)
+                {
+                    forward += points[i] - points[i - 1];
+                }
+                forward.Normalize();
+                Vector2 left = new Vector2(-forward.y, forward.x);
+
+                verts[vertIndex] = points[i] + left * roadWidth;
+                verts[vertIndex + 1] = points[i] - left * roadWidth;
+
+                float completionPercent = i / (float)(points.Length - 1);
+                uvs[vertIndex] = new Vector2(0, completionPercent);
+                uvs[vertIndex + 1] = new Vector2(1, completionPercent);
+
+
+                if (i < points.Length - 1)
+                {
+                    tris[triIndex] = vertIndex;
+                    tris[triIndex + 1] = vertIndex + 2;
+                    tris[triIndex + 2] = vertIndex + 1;
+
+                    tris[triIndex + 3] = vertIndex + 1;
+                    tris[triIndex + 4] = vertIndex + 2;
+                    tris[triIndex + 5] = vertIndex + 3;
+                }
+
+                vertIndex += 2;
+                triIndex += 6;
+            }
+            Mesh mesh = new Mesh();
+            mesh.vertices = verts;
+            mesh.triangles = tris;
+            mesh.uv = uvs;
             return mesh;
         }
 
-        public static Mesh CreateCurvedMesh(Vector3 startPoint, Vector3 midPoint, Vector3 endPoint, float multiplier, float roadWidth)
+        public static Mesh CreateBezierContinuation(Vector3 startPoint, Vector3 midPoint, Vector3 endPoint, float multiplier, float roadWidth)
         {
-            List<Vector3> points = new List<Vector3>();
-            Vector3 start = new Vector3(0, 0, 0);
-            Vector3 mid = midPoint - startPoint;
-            Vector3 end = endPoint - startPoint;
-            // Create the points, going from start to end
-            for (float t = 0; t < 1; t += multiplier)
+            List<Vector2> pointsList = new List<Vector2>();
+            Vector2 start = Vector3Extensions.ToVector2(startPoint);
+            Vector2 mid = Vector3Extensions.ToVector2(midPoint);
+            Vector2 end = Vector3Extensions.ToVector2(endPoint);
+            mid -= start;
+            end -= start;
+            start = new Vector2(0, 0);
+
+            for(float i = 0; i < 1; i+= multiplier)
             {
-                points.Add(BezierCurves.Quadratic(t, start, mid, end));
-                if (t < 1 && t > 1 - multiplier)
+                pointsList.Add(BezierCurves.Quadratic(i, start, mid, end));
+            }
+
+            Vector2[] points = pointsList.ToArray();
+            // vertices = 2 * number of points
+            // triangles = (2 * (number of points - 1) * 3) 
+            Vector3[] verts = new Vector3[points.Length * 2];
+            Vector2[] uvs = new Vector2[verts.Length];
+            int[] tris = new int[2 * (points.Length - 1) * 3];
+            int vertIndex = 0;
+            int triIndex = 0;
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                Vector2 forward = Vector2.zero;
+                if (i < points.Length - 1)
                 {
-                    points.Add(end);
+                    forward += points[i + 1] - points[i];
                 }
+                if (i > 0)
+                {
+                    forward += points[i] - points[i - 1];
+                }
+                forward.Normalize();
+                Vector2 left = new Vector2(-forward.y, forward.x);
+
+                verts[vertIndex] = points[i] + left * roadWidth * .5f;
+                verts[vertIndex + 1] = points[i] - left * roadWidth * .5f;
+
+                float completionPercent = i / (float)(points.Length - 1);
+                uvs[vertIndex] = new Vector2(0, completionPercent);
+                uvs[vertIndex + 1] = new Vector2(1, completionPercent);
+
+
+                if (i < points.Length - 1)
+                {
+                    tris[triIndex] = vertIndex;
+                    tris[triIndex + 1] = vertIndex + 2;
+                    tris[triIndex + 2] = vertIndex + 1;
+
+                    tris[triIndex + 3] = vertIndex + 1;
+                    tris[triIndex + 4] = vertIndex + 2;
+                    tris[triIndex + 5] = vertIndex + 3;
+                }
+
+                vertIndex += 2;
+                triIndex += 6;
             }
-
-
-            // Create the verts, they are on left and right of the points
-            List<Vector3> verts = new List<Vector3>();
-            for (int i = 0; i < points.Count; i++)
-            {
-                verts.Add(new Vector3(points[i].x, points[i].y, roadWidth));
-                verts.Add(new Vector3(points[i].x, points[i].y, -roadWidth));
-            }
-
-            // Create the triangles
-            List<int> triangles = new List<int>();
-            for (int i = 0; i < (points.Count * 1.5f) + 2; i += 2)
-            {
-                triangles.Add(i);
-                triangles.Add(i + 2);
-                triangles.Add(i + 1);
-
-                triangles.Add(i + 1);
-                triangles.Add(i + 2);
-                triangles.Add(i + 3);
-            }
-
             Mesh mesh = new Mesh();
-            mesh.vertices = verts.ToArray();
-            mesh.triangles = triangles.ToArray();
+            mesh.vertices = verts;
+            mesh.triangles = tris;
+            mesh.uv = uvs;
             return mesh;
         }
     }

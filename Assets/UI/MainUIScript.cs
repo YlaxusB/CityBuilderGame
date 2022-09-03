@@ -69,8 +69,13 @@ public class MainUIScript : MonoBehaviour
             scrollView.verticalScrollerVisibility = ScrollerVisibility.Hidden;
             rootVisualElement.Q<VisualElement>("CustomUI").visible = true;
         }
+
+        // Add functionality to extra roads buttons 
+        ExtraButtonsRoads();
     }
 
+    #region Custom UI
+    #region Custom UI - Roads
     // Get all roads from the game and display in the ui
     private void InsertRoadsIntoCustomUI()
     {
@@ -115,8 +120,7 @@ public class MainUIScript : MonoBehaviour
                         roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, roadProperties.roadPreviewMaterial, roadProperties.roadObstructedMaterial, road.name, road);
                     }
                 });
-               // img.RegisterCallback<ClickEvent>(Event => startRoad(roadProperties.roadWidth, ((int)roadProperties.roadLanes),
-               //     roadProperties.oneWay, roadProperties.roadTexture, roadProperties.roadMaterial, road.name, road));
+
                 scrollView.Add(img);
             }
         }
@@ -138,4 +142,40 @@ public class MainUIScript : MonoBehaviour
             roadComponent.roadObstructedMaterial = roadObstructedMaterial;
         }
     }
+
+    // Add functionality to Extra Road Buttons
+    private void ExtraButtonsRoads()
+    {
+        VisualElement rootVisualElement = GetComponent<UIDocument>().rootVisualElement;
+        // Get all extra buttons and put them in a list
+        List<Button> roadButtons = new List<Button>();
+        Button straightButton = rootVisualElement.Q<Button>("StraightButton");
+        Button bezierButton = rootVisualElement.Q<Button>("BezierButton");
+        Button arcButton = rootVisualElement.Q<Button>("ArcButton");
+        roadButtons.Add(straightButton);
+        roadButtons.Add(bezierButton);
+        roadButtons.Add(arcButton);
+        
+        // When click on any extra road button execute the selectButton function
+        foreach(Button button in roadButtons)
+        {
+            button.RegisterCallback<ClickEvent>(Event => selectButton(button, roadButtons));
+        }
+    }
+
+    private void selectButton(Button clickedButton, List<Button> buttons)
+    {
+        foreach(Button button in buttons)
+        {
+            button.style.backgroundColor = new StyleColor(Color.grey);
+        }
+        clickedButton.style.backgroundColor = new StyleColor(Color.white);
+
+        foreach (Button button in buttons)
+        {
+            Debug.Log(button.style.backgroundColor.ToString());
+        }
+    }
+    #endregion
+    #endregion
 }
