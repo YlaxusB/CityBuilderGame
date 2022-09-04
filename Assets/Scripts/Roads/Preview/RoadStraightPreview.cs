@@ -31,6 +31,9 @@ namespace Preview
 
             // Collision System
             previewRoad.AddComponent<PreviewColliderScript>();
+            Rigidbody rigidbody = previewRoad.AddComponent<Rigidbody>();
+            rigidbody.useGravity = false;
+            rigidbody.constraints = RigidbodyConstraints.FreezeAll;
 
             // Add this plane to preview roads "folder" and start the update preview that runs each game update
             previewRoad.transform.parent = GameObject.Find("Preview Roads").transform;
@@ -41,7 +44,7 @@ namespace Preview
         public static IEnumerator Update(GameObject road, RoadProperties roadProperties, List<Vector3> points)
         {
             bool canRun = true;
-            while (canRun)
+            while (canRun && points.Count > 0)
             {
                 MeshFilter roadMeshFilter = road.GetComponent<MeshFilter>();
                 Vector3 endPosition = Raycasts.raycastPosition3D(roadProperties.camera);
@@ -50,7 +53,7 @@ namespace Preview
                     endPosition, 0.1f, roadProperties.width, roadProperties).mesh;
                 float angle = -Mathf.Atan2(Mathf.Round(endPosition.z) - Mathf.Round(points[0].z),
                     Mathf.Round(endPosition.x) - Mathf.Round(points[0].x)) * (180 / Mathf.PI);
-                road.transform.rotation = Quaternion.Euler(0, angle, 0);
+                road.transform.rotation = Quaternion.Euler(0, Mathf.Round(angle), 0);
                 //road.transform.ro
 
                 // Check colliding and create intersections

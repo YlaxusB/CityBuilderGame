@@ -17,7 +17,7 @@ public class CreateRoad : MonoBehaviour
         road.transform.position = new Vector3(Mathf.Round(points[0].x), roadProperties.height, Mathf.Round(points[0].z));
         road.transform.rotation = Quaternion.Euler(180, 0, 0);
         road.name = "Road";
-        road.layer = LayerMask.GetMask("Road");
+        road.layer = LayerMask.NameToLayer("Road");
 
         // Material and textures
         MeshRenderer roadMeshRenderer = road.GetComponent<MeshRenderer>();

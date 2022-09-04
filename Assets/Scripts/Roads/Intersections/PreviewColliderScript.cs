@@ -4,12 +4,25 @@ using UnityEngine;
 
 public class PreviewColliderScript : MonoBehaviour
 {
+    bool firstCollidedBool = false;
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("eae");
-        if(collision.gameObject.layer == LayerMask.GetMask("Road"))
+        if(collision.gameObject.layer == LayerMask.NameToLayer("Road"))
         {
-            Debug.Log(collision.gameObject.GetComponent<RoadProperties>().points);
+            RoadProperties colliderProperties = collision.gameObject.GetComponent<RoadProperties>();
+            List<Vector3> colliderPoints = colliderProperties.points;
+
+            if (!firstCollidedBool)
+            {
+                firstCollidedBool = true;
+            }
+
+
+
+            if (firstCollidedBool)
+            {
+                Debug.Log("Eita é mesmo");
+            }
         }
     }
 }
