@@ -416,6 +416,8 @@ namespace RoadsMeshCreator
             return newMesh;
         }
 
+        
+
 
         public static void RemoveFrom<T>(this List<T> lst, int from)
         {
@@ -433,6 +435,82 @@ namespace RoadsMeshCreator
             }
             newMesh.CombineMeshes(combine);
             return newMesh;
+        }
+
+        // Create straight continued mesh
+        public static Mesh CreateStraightContinuationMesh(Vector3 startPoint, Vector3 midPoint, Vector3 endPoint, float multiplier, float roadWidth)
+        {
+            List<Vector2> pointsList = new List<Vector2>();
+            //pointsList.Add(new Vector2(startPoint.x - 0.01f, startPoint.z));
+            Vector2 start = Vector3Extensions.ToVector2(startPoint);
+            Vector2 mid = Vector3Extensions.ToVector2(midPoint);
+            Vector2 end = Vector3Extensions.ToVector2(endPoint);
+            mid -= start;
+            end -= start;
+            start = new Vector2(0, 0);
+
+            for (float i = 0; i < 1; i += multiplier)
+            {
+                pointsList.Add(BezierCurves.Quadratic(i, start, mid, end));
+            }
+
+            // Iterate to get the distance of startPoint and endPoint traveled by the road
+            float distance = 0;
+            for (int i = pointsList.Count - 1; i > 1; i--)
+            {
+                distance += Vector3.Distance(pointsList[i], pointsList[i - 1]);
+            }
+
+            Vector2[] points = pointsList.ToArray();
+            // vertices = 2 * number of points
+            // triangles = (2 * (number of points - 1) * 3) 
+            Vector3[] verts = new Vector3[points.Length * 2];
+            Vector2[] uvs = new Vector2[verts.Length];
+            int[] tris = new int[2 * (points.Length - 1) * 3];
+            int vertIndex = 0;
+            int triIndex = 0;
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                Vector2 forward = Vector2.zero;
+                if (i < points.Length - 1)
+                {
+                    forward += points[i + 1] - points[i];
+                }
+                if (i > 0)
+                {
+                    forward += points[i] - points[i - 1];
+                }
+                forward.Normalize();
+                Vector2 left = new Vector2(-forward.y, forward.x);
+
+                verts[vertIndex] = points[i] + left * roadWidth;
+                verts[vertIndex + 1] = points[i] - left * roadWidth;
+
+                float completionPercent = i / (float)(points.Length - 1);
+                uvs[vertIndex] = new Vector2(0, completionPercent);
+                uvs[vertIndex + 1] = new Vector2(1, completionPercent);
+
+
+                if (i < points.Length - 1)
+                {
+                    tris[triIndex] = vertIndex;
+                    tris[triIndex + 1] = vertIndex + 2;
+                    tris[triIndex + 2] = vertIndex + 1;
+
+                    tris[triIndex + 3] = vertIndex + 1;
+                    tris[triIndex + 4] = vertIndex + 2;
+                    tris[triIndex + 5] = vertIndex + 3;
+                }
+
+                vertIndex += 2;
+                triIndex += 6;
+            }
+            Mesh mesh = new Mesh();
+            mesh.vertices = verts;
+            mesh.triangles = tris;
+            mesh.uv = uvs;
+            return mesh;
         }
         #endregion
     }
