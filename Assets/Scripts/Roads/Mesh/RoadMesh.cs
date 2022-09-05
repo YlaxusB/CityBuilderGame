@@ -328,8 +328,6 @@ namespace RoadsMeshCreator
             {
                 return roadProperties.mesh;
             }
-            Debug.Log(roadProperties.points.Count);
-            Debug.Log(previewPointsToExclude);
 
             Mesh oldMesh = roadProperties.mesh;
             List<Vector3> oldVertices = oldMesh.vertices.ToList();
@@ -343,7 +341,6 @@ namespace RoadsMeshCreator
             // Remove the initials points
             RoadProperties newRoadProperties = roadProperties;
             newRoadProperties.points.RemoveRange(0, previewPointsToExclude);
-            Debug.Log(newRoadProperties.points.Count);
 
 
             List<int> newTriangles = new List<int>();//oldMesh.triangles.ToList();
@@ -423,6 +420,19 @@ namespace RoadsMeshCreator
         public static void RemoveFrom<T>(this List<T> lst, int from)
         {
             lst.RemoveRange(from, lst.Count - from);
+        }
+
+        // Combine Meshes
+        public static Mesh CombineMeshes(List<Mesh> meshes)
+        {
+            Mesh newMesh = new Mesh();
+            CombineInstance[] combine = new CombineInstance[meshes.Count - 1];
+            for(int i = 0; i < meshes.Count - 1; i++)
+            {
+                combine[i].mesh = meshes[i];
+            }
+            newMesh.CombineMeshes(combine);
+            return newMesh;
         }
         #endregion
     }

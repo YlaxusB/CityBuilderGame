@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using RoadsMeshCreator;
 using CustomHelper;
+using CustomDebugger;
 
 public class PreviewColliderScript : MonoBehaviour
 {
     bool firstCollidedBool = false;
     GameObject firstCollidedObject;
+
+    GameObject a;
+    GameObject b;
+    GameObject c;
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Road"))
@@ -25,28 +30,56 @@ public class PreviewColliderScript : MonoBehaviour
                 RoadProperties firstProperties = firstCollidedObject.gameObject.GetComponent<RoadProperties>();
                 RoadProperties previewProperties = gameObject.GetComponent<RoadProperties>();
 
+                // The points that will be excluded, to create their connections
                 float firstPointsToExclude = Mathf.Ceil(firstProperties.width / 5) + 1;
                 float previewPointsToExclude = Mathf.Ceil(previewProperties.width / 5) + 1;
                 Mesh newMesh = RoadMesh.UpdatePreviousMesh(firstProperties, ((int)firstPointsToExclude));
 
-
+                // Delete the last x points of the previous road mesh
                 MeshFilter firstCollidedMeshFilter = firstCollidedObject.gameObject.GetComponent<MeshFilter>();
                 firstCollidedMeshFilter.mesh = newMesh;
 
+                // Delete the first x points of this preview road mesh
                 gameObject.GetComponent<MeshFilter>().mesh = RoadMesh.UpdatePreviewMesh(previewProperties,
                     ((int)previewPointsToExclude));
 
                 // Continuation mesh
+                /*
                 GameObject continuationObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
                 continuationObject.transform.position = firstCollidedObject.transform.position; //- firstProperties.points[firstProperties.points.Count - 1];
                 continuationObject.transform.rotation = firstCollidedObject.transform.rotation;
+                continuationObject.transform.position += continuationObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]);
+                continuationObject.transform.rotation = firstCollidedObject.transform.rotation;
                 continuationObject.name = "continuation object";
+                */
 
-                // Create a bezier tomorrow
+                // Create a bezier between last road and the new created road
+
+                GameObject continuationObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                continuationObject.name = "continuation object";
+                Vector3 endCollidedRoad = firstCollidedObject.transform.position +
+                    (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
+
+                continuationObject.transform.position = endCollidedRoad;
+                continuationObject.transform.rotation = Quaternion.Euler(90, 0, 0);
+
+                MeshFilter continuationMeshFilter = continuationObject.GetComponent<MeshFilter>();
+
+                Vector3 midPoint = firstCollidedObject.transform.position;
+
+                Vector3 previewStart = transform.position + (transform.TransformDirection(previewProperties.points[0]));//previewProperties.points[0]));
+
+                // Debugg
+                a = Debugger.Primitive(PrimitiveType.Cube, "a", endCollidedRoad, Quaternion.Euler(0,0,0));
+                b = Debugger.Primitive(PrimitiveType.Cube, "b", midPoint, Quaternion.Euler(0, 0, 0));
+                c = Debugger.Primitive(PrimitiveType.Cube, "c", previewStart, Quaternion.Euler(0, 0, 0));
+
+                // Start updating the connection
+                StartCoroutine(UpdateStart());
             }
 
 
-
+            // Check if road is colliding with the previous road (in case of road continuation)
             if (firstCollidedBool)
             {
                 RoadProperties firstProperties = firstCollidedObject.gameObject.GetComponent<RoadProperties>();
@@ -59,14 +92,47 @@ public class PreviewColliderScript : MonoBehaviour
                 // is the quantity of points needed to exclude (+ 1 because the last point is less than 5 spacing)
                 float firstPointsToExclude = Mathf.Ceil(firstProperties.width / 5) + 1;
                 float previewPointsToExclude = Mathf.Ceil(previewProperties.width / 5) + 1;
-                //RoadMesh.UpdatePreviousMesh(firstProperties, ((int)firstPointsToExclude));
+                // Keep removing 
                 MeshFilter filter = gameObject.GetComponent<MeshFilter>();
                 filter.mesh = RoadMesh.UpdatePreviewMesh(previewProperties, ((int)previewPointsToExclude));
-                Debug.Log(firstPointsToExclude);
-                Debug.Log(previewPointsToExclude);
-
-                Debug.Log("Eita é mesmo");
             }
         }
+    }
+
+    private IEnumerator UpdateStart()
+    {
+        while (true)
+        {
+            RoadProperties firstProperties = firstCollidedObject.gameObject.GetComponent<RoadProperties>();
+            RoadProperties previewProperties = gameObject.GetComponent<RoadProperties>();
+
+            GameObject continuationObject = GameObject.Find("continuation object");
+            MeshFilter continuationMeshFilter = continuationObject.GetComponent<MeshFilter>();
+
+            // The end of previous road
+            Vector3 endCollidedRoad = firstCollidedObject.transform.position +
+                (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
+            // The mid point to bezier, but its just the first (deleted) point of preview start
+            Vector3 midPoint = transform.position;
+            // The start of preview (after the points are deleted)
+            Vector3 previewStart = transform.position + (transform.TransformDirection(previewProperties.points[0]));
+            // Create and apply the new mesh
+            continuationMeshFilter.mesh = RoadMesh.CreateBezierMesh(endCollidedRoad, midPoint, previewStart, 0.01f, firstProperties.width);
+
+            // Debugg
+            a.transform.position = endCollidedRoad;
+            b.transform.position = midPoint;
+            c.transform.position = previewStart;
+
+            yield return null;
+        }
+    }
+
+    public void DestroyContinuation()
+    {
+        Destroy(a);
+        Destroy(b);
+        Destroy(c);
+        Destroy(GameObject.Find("continuation object"));
     }
 }
