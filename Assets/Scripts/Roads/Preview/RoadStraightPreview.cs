@@ -38,10 +38,14 @@ namespace Preview
             // Add this plane to preview roads "folder" and start the update preview that runs each game update
             previewRoad.transform.parent = GameObject.Find("Preview Roads").transform;
 
+            // Add properties to preview
+            RoadProperties previewProperties = previewRoad.AddComponent<RoadProperties>();
+            previewProperties.ChangeProperties(roadProperties);
+
             return previewRoad;
         }
 
-        public static IEnumerator Update(GameObject road, RoadProperties roadProperties, List<Vector3> points)
+        public static IEnumerator Update(GameObject road, RoadProperties roadProperties, List<Vector3> points, bool continuation)
         {
             bool canRun = true;
             while (canRun && points.Count > 0)
@@ -49,8 +53,17 @@ namespace Preview
                 MeshFilter roadMeshFilter = road.GetComponent<MeshFilter>();
                 Vector3 endPosition = Raycasts.raycastPosition3D(roadProperties.camera);
                 // Update Mesh
-                roadMeshFilter.mesh = RoadMesh.CreateStraightMesh(points[0],
+               Mesh newMesh = RoadMesh.CreateStraightMesh(points[0],
                     endPosition, 0.1f, roadProperties.width, roadProperties).mesh;
+                roadProperties.mesh = newMesh;
+                if (continuation)
+                {
+                    roadMeshFilter.mesh = RoadMesh.UpdatePreviewMesh(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)));
+                }
+                else
+                {
+                    roadMeshFilter.mesh = newMesh;
+                }
                 float angle = -Mathf.Atan2(Mathf.Round(endPosition.z) - Mathf.Round(points[0].z),
                     Mathf.Round(endPosition.x) - Mathf.Round(points[0].x)) * (180 / Mathf.PI);
                 road.transform.rotation = Quaternion.Euler(0, Mathf.Round(angle), 0);
@@ -63,6 +76,10 @@ namespace Preview
                     roadMeshCollider.sharedMesh = roadMeshFilter.mesh;
                 }
                 roadMeshCollider.convex = true;
+
+                // Update properties from preview
+                RoadProperties previewProperties = road.GetComponent<RoadProperties>();
+                previewProperties.ChangeProperties(roadProperties);
 
                 yield return null;
             }

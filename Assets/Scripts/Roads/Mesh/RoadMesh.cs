@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using CustomHelper;
+using System;
+using System.Linq;
 
 namespace RoadsMeshCreator
 {
@@ -267,5 +269,161 @@ namespace RoadsMeshCreator
             mesh.uv = uvs;
             return mesh;
         }
+
+        #region Junctions
+
+        // Road Continuation
+
+        // Update previous road (remove the ending points)
+        public static Mesh UpdatePreviousMesh(RoadProperties roadProperties, int firstPointsToExclude)
+        {
+            Debug.Log(roadProperties.points.Count);
+            Debug.Log(firstPointsToExclude);
+
+            Mesh oldMesh = roadProperties.mesh;
+            List<Vector3> oldVertices = oldMesh.vertices.ToList();
+            List<int> oldTriangles = oldMesh.triangles.ToList();
+            List<Vector2> oldUvs = oldMesh.uv.ToList();
+
+            oldVertices.RemoveRange(oldVertices.Count - (firstPointsToExclude * 2), firstPointsToExclude * 2);
+            List<Vector3> newVertices = oldVertices;
+
+            RoadProperties newRoadProperties = roadProperties;
+            //newRoadProperties.points.remove(newRoadProperties.points.Count - 1 - firstPointsToExclude, firstPointsToExclude - 1);
+            RemoveFrom(newRoadProperties.points, newRoadProperties.points.Count - firstPointsToExclude);
+            Debug.Log(newRoadProperties.points.Count);
+
+
+            List<int> newTriangles = new List<int>();//oldMesh.triangles.ToList();
+            for (int i = 0; i < 2 * (roadProperties.points.Count - 1); i += 2)
+            {
+                newTriangles.Add(i);
+                newTriangles.Add(i + 2);
+                newTriangles.Add(i + 1);
+
+                newTriangles.Add(i + 1);
+                newTriangles.Add(i + 2);
+                newTriangles.Add(i + 3);
+            }
+
+            List<Vector2> newUvs = new List<Vector2>();//oldMesh.uv.ToList();
+            for (int i = 0; i < roadProperties.points.Count; i++)
+            {
+                float completionPercent = 1 / (roadProperties.points.Count - 1);
+                newUvs.Add(new Vector2(0, completionPercent));
+                newUvs.Add(new Vector2(1, completionPercent));
+            }
+
+            Mesh newMesh = new Mesh();
+            newMesh.vertices = newVertices.ToArray();
+            newMesh.triangles = newTriangles.ToArray();
+            newMesh.uv = newUvs.ToArray();
+            return newMesh;
+        }
+
+        // Update the preview continuation (remove the starting points)
+        public static Mesh UpdatePreviewMesh(RoadProperties roadProperties, int previewPointsToExclude)
+        {
+            if(roadProperties.points.Count <= previewPointsToExclude)
+            {
+                return roadProperties.mesh;
+            }
+            Debug.Log(roadProperties.points.Count);
+            Debug.Log(previewPointsToExclude);
+
+            Mesh oldMesh = roadProperties.mesh;
+            List<Vector3> oldVertices = oldMesh.vertices.ToList();
+            List<int> oldTriangles = oldMesh.triangles.ToList();
+            List<Vector2> oldUvs = oldMesh.uv.ToList();
+
+            // Remove the initials vertices
+            oldVertices.RemoveRange(0, previewPointsToExclude * 2);
+            List<Vector3> newVertices = oldVertices;
+
+            // Remove the initials points
+            RoadProperties newRoadProperties = roadProperties;
+            newRoadProperties.points.RemoveRange(0, previewPointsToExclude);
+            Debug.Log(newRoadProperties.points.Count);
+
+
+            List<int> newTriangles = new List<int>();//oldMesh.triangles.ToList();
+            for (int i = 0; i < 2 * (roadProperties.points.Count - 1); i += 2)
+            {
+                newTriangles.Add(i);
+                newTriangles.Add(i + 2);
+                newTriangles.Add(i + 1);
+
+                newTriangles.Add(i + 1);
+                newTriangles.Add(i + 2);
+                newTriangles.Add(i + 3);
+            }
+
+            List<Vector2> newUvs = new List<Vector2>();//oldMesh.uv.ToList();
+            for (int i = 0; i < roadProperties.points.Count; i++)
+            {
+                float completionPercent = 1 / (roadProperties.points.Count - 1);
+                newUvs.Add(new Vector2(0, completionPercent));
+                newUvs.Add(new Vector2(1, completionPercent));
+            }
+
+            Mesh newMesh = new Mesh();
+            newMesh.vertices = newVertices.ToArray();
+            newMesh.triangles = newTriangles.ToArray();
+            newMesh.uv = newUvs.ToArray();
+            return newMesh;
+        }
+
+        // Create straight junction continuation
+        public static Mesh CreateContinuationMesh(RoadProperties roadProperties, int previewPointsToExclude)
+        {
+
+            Mesh oldMesh = roadProperties.mesh;
+            List<Vector3> oldVertices = oldMesh.vertices.ToList();
+            List<int> oldTriangles = oldMesh.triangles.ToList();
+            List<Vector2> oldUvs = oldMesh.uv.ToList();
+
+            // Remove the initials vertices
+            oldVertices.RemoveRange(0, previewPointsToExclude * 2);
+            List<Vector3> newVertices = oldVertices;
+
+            // Remove the initials points
+            RoadProperties newRoadProperties = roadProperties;
+            newRoadProperties.points.RemoveRange(0, previewPointsToExclude);
+            Debug.Log(newRoadProperties.points.Count);
+
+
+            List<int> newTriangles = new List<int>();//oldMesh.triangles.ToList();
+            for (int i = 0; i < 2 * (roadProperties.points.Count - 1); i += 2)
+            {
+                newTriangles.Add(i);
+                newTriangles.Add(i + 2);
+                newTriangles.Add(i + 1);
+
+                newTriangles.Add(i + 1);
+                newTriangles.Add(i + 2);
+                newTriangles.Add(i + 3);
+            }
+
+            List<Vector2> newUvs = new List<Vector2>();//oldMesh.uv.ToList();
+            for (int i = 0; i < roadProperties.points.Count; i++)
+            {
+                float completionPercent = 1 / (roadProperties.points.Count - 1);
+                newUvs.Add(new Vector2(0, completionPercent));
+                newUvs.Add(new Vector2(1, completionPercent));
+            }
+
+            Mesh newMesh = new Mesh();
+            newMesh.vertices = newVertices.ToArray();
+            newMesh.triangles = newTriangles.ToArray();
+            newMesh.uv = newUvs.ToArray();
+            return newMesh;
+        }
+
+
+        public static void RemoveFrom<T>(this List<T> lst, int from)
+        {
+            lst.RemoveRange(from, lst.Count - from);
+        }
+        #endregion
     }
 }

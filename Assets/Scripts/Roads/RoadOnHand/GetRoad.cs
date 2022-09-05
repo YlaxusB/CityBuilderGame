@@ -65,6 +65,7 @@ public class GetRoad : MonoBehaviour
     }
 
     int i = 0;
+    private bool continuation = false;
     private void Update()
     {
         // When left click on any place that is not ui
@@ -78,7 +79,8 @@ public class GetRoad : MonoBehaviour
             // preview and create the final road
             if (shape == "straight" && points.Count == 2)
             {
-                CreateRoad.Straight(points, roadProperties);
+                continuation = true;
+                CreateRoad.Straight(points, roadProperties, continuation);
                 Destroy(previewRoad);
                 points = new List<Vector3>() { points[1] };
             }
@@ -97,7 +99,7 @@ public class GetRoad : MonoBehaviour
             {
                 // Straight
                 previewRoad = StraightPreview.Create(roadProperties, points);
-                StartCoroutine(StraightPreview.Update(previewRoad, roadProperties, points));
+                StartCoroutine(StraightPreview.Update(previewRoad, roadProperties, points, continuation));
             }
             else if (points.Count == 2)
             {
@@ -109,6 +111,8 @@ public class GetRoad : MonoBehaviour
         // When right click on any place that is not ui
         if (Input.GetButtonDown("Fire2") && !UIToolkitRaycastChecker.IsPointerOverUI())
         {
+            continuation = false; //////////////////////////////////////////////////////////////////////////////////////
+
             // If there's no more points, then just remove the road from the hands
             if (points.Count == 0)
             {
@@ -134,7 +138,7 @@ public class GetRoad : MonoBehaviour
                 StopAllCoroutines();
                 Destroy(previewRoad);
                 previewRoad = StraightPreview.Create(roadProperties, points);
-                StartCoroutine(StraightPreview.Update(previewRoad, roadProperties, points));
+                StartCoroutine(StraightPreview.Update(previewRoad, roadProperties, points, continuation));
             }
             else if (points.Count > 2)
             {

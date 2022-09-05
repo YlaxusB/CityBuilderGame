@@ -8,7 +8,7 @@ using RoadsMeshCreator;
 public class CreateRoad : MonoBehaviour
 {
     // Straight Road
-    public static void Straight(List<Vector3> points, RoadProperties roadProperties)
+    public static void Straight(List<Vector3> points, RoadProperties roadProperties, bool continuation)
     {
         float multiplier = 0.1f;
 
@@ -45,6 +45,14 @@ public class CreateRoad : MonoBehaviour
 
         roadProperties = RoadMesh.CreateStraightMesh(points[0], points[1], multiplier, roadProperties.width, roadProperties);
 
+        // Check if its a continuation
+        if (continuation)
+        {
+            Mesh newMesh = RoadMesh.UpdatePreviewMesh(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)));
+            roadProperties.mesh = newMesh;
+            roadMeshFilter.mesh = newMesh;
+            roadMeshCollider.sharedMesh = newMesh;
+        }
         road.AddComponent(roadProperties.GetType());
         RoadProperties component = road.GetComponent<RoadProperties>();
         component.ChangeProperties(roadProperties);
