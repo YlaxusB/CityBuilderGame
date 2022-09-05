@@ -79,8 +79,24 @@ public class GetRoad : MonoBehaviour
             // preview and create the final road
             if (shape == "straight" && points.Count == 2)
             {
+                // Check if it's a continuation
+                if (continuation)
+                {
+                    CreateRoad.Straight(points, roadProperties, continuation);
+                    //CreateRoad.StraightContinuation();
+                    PreviewColliderScript colliderScript = previewRoad.GetComponent<PreviewColliderScript>();
+                    GameObject roadContinuation = colliderScript.GetContinuation();
+                    colliderScript.InsertProperties(roadProperties, roadContinuation);
+                    colliderScript.DestroyContinuation();
+                }
+                else
+                {
+                    CreateRoad.Straight(points, roadProperties, continuation);
+                    PreviewColliderScript colliderScript = previewRoad.GetComponent<PreviewColliderScript>();
+                    colliderScript.DestroyContinuation();
+                }
                 continuation = true;
-                CreateRoad.Straight(points, roadProperties, continuation);
+
                 Destroy(previewRoad);
                 points = new List<Vector3>() { points[1] };
             }
@@ -112,6 +128,8 @@ public class GetRoad : MonoBehaviour
         if (Input.GetButtonDown("Fire2") && !UIToolkitRaycastChecker.IsPointerOverUI())
         {
             continuation = false; //////////////////////////////////////////////////////////////////////////////////////
+            PreviewColliderScript colliderScript = previewRoad.GetComponent<PreviewColliderScript>();
+            colliderScript.DestroyContinuation();
 
             // If there's no more points, then just remove the road from the hands
             if (points.Count == 0)

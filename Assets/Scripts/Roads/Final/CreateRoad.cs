@@ -58,6 +58,12 @@ public class CreateRoad : MonoBehaviour
         component.ChangeProperties(roadProperties);
     }
 
+    // Straight Continuation
+    public static void StraightContinuation()
+    {
+
+    }
+
     // Bezier Road
     public static void Bezier(List<Vector3> points, RoadProperties roadProperties)
     {
