@@ -4,7 +4,8 @@ using UnityEngine;
 using RoadsMeshCreator;
 using CustomHelper;
 using CustomDebugger;
-
+using System;
+using System.Linq;
 public class PreviewColliderScript : MonoBehaviour
 {
     bool firstCollidedBool = false;
@@ -32,8 +33,8 @@ public class PreviewColliderScript : MonoBehaviour
                 RoadProperties previewProperties = gameObject.GetComponent<RoadProperties>();
 
                 // The points that will be excluded, to create their connections
-                float firstPointsToExclude = Mathf.Ceil(firstProperties.width / 5) + 1;
-                float previewPointsToExclude = Mathf.Ceil(previewProperties.width / 5) + 1;
+                float firstPointsToExclude = Mathf.Ceil(firstProperties.width / 10) + 1;
+                float previewPointsToExclude = Mathf.Ceil(previewProperties.width / 10) + 1;
                 Mesh newMesh = RoadMesh.UpdatePreviousMesh(firstProperties, ((int)firstPointsToExclude));
 
                 // Delete the last x points of the previous road mesh
@@ -114,11 +115,14 @@ public class PreviewColliderScript : MonoBehaviour
 
             // The end of previous road
             Vector3 endCollidedRoad = firstCollidedObject.transform.position +
-                (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
+                (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1] - new Vector3(0.5f, 0, 0)));
+
             // The start of preview (after the points are deleted)
-            Vector3 previewStart = transform.position + (transform.TransformDirection(previewProperties.points[0]));
+            Vector3 previewStart = transform.position + (transform.TransformDirection(previewProperties.points[0]) + new Vector3(0.5f, 0, 0));
+
             // The mid point to bezier, but its just the first (deleted) point of preview start
-            Vector3 midPoint = endCollidedRoad + (previewStart - endCollidedRoad);
+            Vector3 midPoint = transform.position;
+
             // Create and apply the new mesh
             continuationMeshFilter.mesh = RoadMesh.CreateBezierMesh(endCollidedRoad, midPoint, previewStart, 0.01f, firstProperties.width);
 
@@ -149,7 +153,7 @@ public class PreviewColliderScript : MonoBehaviour
         Vector3 endCollidedRoad = firstCollidedObject.transform.position +
             (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
 
-        continuationObject.transform.position = endCollidedRoad;
+        continuationObject.transform.position = new Vector3(endCollidedRoad.x, 0.2f, endCollidedRoad.z);
         continuationObject.transform.rotation = Quaternion.Euler(90, 0, 0);
         // The end of previous road
         endCollidedRoad = firstCollidedObject.transform.position +
@@ -159,11 +163,57 @@ public class PreviewColliderScript : MonoBehaviour
         Vector3 previewStart = transform.position + (transform.TransformDirection(previewProperties.points[0]));
 
         // The mid point to bezier, but its just the first (deleted) point of preview start
-        Vector3 midPoint = endCollidedRoad + (previewStart - endCollidedRoad);
+        Vector3 midPoint = transform.position;
 
         // Create and apply the new mesh
         continuationMeshFilter.mesh = RoadMesh.CreateStraightContinuationMesh(endCollidedRoad, midPoint, previewStart, 0.01f, firstProperties.width);
+        //AdjustContinuation(firstCollidedObject, gameObject, continuationObject);
         return continuationObject;
+    }
+    // Adjust continuation
+    public void AdjustContinuation(GameObject collidedObject, GameObject previewObject, GameObject continuationObject)
+    {
+        MeshFilter collidedMF = collidedObject.GetComponent<MeshFilter>();
+        MeshFilter previewMF = previewObject.GetComponent<MeshFilter>();
+        MeshFilter continuationMF = continuationObject.GetComponent<MeshFilter>();
+
+        Mesh newMesh = new Mesh();
+        List<Vector3> newVertices = new List<Vector3>();
+        List<int> newTriangles = new List<int>();
+
+        int oldestLastIndex = continuationMF.mesh.triangles.Length - 1;
+        //newVertices = continuationMF.mesh.vertices.ToList();
+        //newTriangles = continuationMF.mesh.triangles.ToList();
+        Debug.Log(newTriangles.Count - 1);
+        Debug.Log(newVertices.Count - 1);
+
+        newVertices.Add(collidedMF.mesh.vertices[collidedMF.mesh.vertices.Length]);
+        newVertices.Add(collidedMF.mesh.vertices[collidedMF.mesh.vertices.Length - 1]);
+        newVertices.Add(continuationMF.mesh.vertices[0]);
+        newVertices.Add(continuationMF.mesh.vertices[1]);
+
+        newTriangles.Add(0);
+        newTriangles.Add(2);
+        newTriangles.Add(3);
+
+        newTriangles.Add(1);
+        newTriangles.Add(2);
+        newTriangles.Add(3);
+
+        Debug.Log("a");
+        newMesh.vertices = newVertices.ToArray();
+        newMesh.triangles = newTriangles.ToArray();
+        //continuationMF.mesh = newMesh;
+        Debug.Log("b");
+
+
+        GameObject asd = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        MeshFilter asdf = asd.GetComponent<MeshFilter>();
+        asdf.mesh.Clear();
+        asd.transform.position = continuationMF.transform.position;
+        asd.transform.rotation = continuationMF.transform.rotation;
+        asdf.mesh = newMesh;
+        //return continuationObject;
     }
 
     // Destroy the continuation preview

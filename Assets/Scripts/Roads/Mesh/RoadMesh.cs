@@ -4,6 +4,8 @@ using UnityEngine;
 using CustomHelper;
 using System;
 using System.Linq;
+using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 
 namespace RoadsMeshCreator
 {
@@ -14,6 +16,7 @@ namespace RoadsMeshCreator
             return new Mesh();
         }
 
+        //  The circle mesh
         public static Mesh CreatePrePreviewMesh(GameObject road, Vector2 initialPoint, float roadWidth)
         {
             List<Vector3> points = new List<Vector3>();
@@ -449,11 +452,34 @@ namespace RoadsMeshCreator
             end -= start;
             start = new Vector2(0, 0);
 
+            /*
+            pointsList.Add(start);
             for (float i = 0; i < 1; i += multiplier)
             {
-                pointsList.Add(BezierCurves.Quadratic(i, start, mid, end));
+                Vector2 p0 = Vector2.Lerp(start, mid, i);
+                Vector2 p1 = Vector2.Lerp(mid, end, i);
+                
+                pointsList.Add(Vector2.Lerp(p0, p1, i));
             }
-
+            pointsList.Add(end);
+            */
+            pointsList.Add(end);
+            for (float i = 0; i <= 1; i += multiplier)
+            {
+                //pointsList.Add(start + ((end - start) * i));
+                //float x1 = ;
+                //float y1 = ;
+                //float x2 = ;
+                //float y2 = ;
+                Vector3 current = pointsList[pointsList.Count - 1];
+                float x = Mathf.Pow(roadWidth - end.x * i, 2) + (end.x);
+                float y = Mathf.Pow(roadWidth - end.y * i, 2) + (end.y);
+                pointsList.Add(new Vector2(Mathf.Sqrt(x), Mathf.Sqrt(y)));
+            }
+            pointsList.RemoveAt(0);
+            pointsList.RemoveAt(1);
+            pointsList.RemoveAt(2);
+            pointsList.RemoveAt(3);
             // Iterate to get the distance of startPoint and endPoint traveled by the road
             float distance = 0;
             for (int i = pointsList.Count - 1; i > 1; i--)
@@ -510,8 +536,18 @@ namespace RoadsMeshCreator
             mesh.vertices = verts;
             mesh.triangles = tris;
             mesh.uv = uvs;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            mesh.RecalculateTangents();
             return mesh;
         }
         #endregion
+
+        // sla 
+        
+        public static void eita()
+        {
+            Handles.DrawWireArc(new Vector3(0, 0.2f, 0), new Vector3(5,0.2f,5), new Vector3(10, 0.2f, 10), 47, 79);
+        }
     }
 }
