@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using CustomHelper;
@@ -6,7 +6,7 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-
+using CustomDebugger;
 namespace RoadsMeshCreator
 {
     public static class RoadMesh
@@ -69,7 +69,7 @@ namespace RoadsMeshCreator
 
             return mesh;
         }
-    
+
         public static RoadProperties CreateStraightMesh(Vector3 startPoint, Vector3 endPoint, float multiplier, float roadWidth, RoadProperties roadProperties)
         {
             List<Vector3> points = new List<Vector3>();
@@ -82,10 +82,10 @@ namespace RoadsMeshCreator
             float desiredCubes = 5;
             multiplier = Mathf.Clamp((1 / distance) * desiredCubes, 0.000001f, 0.2f);
 
-            for (float t = 0; t < 1; t+= multiplier)
+            for (float t = 0; t < 1; t += multiplier)
             {
                 points.Add(BezierCurves.Linear(t, start, end));
-                if(t < 1 && t > 1 - multiplier)
+                if (t < 1 && t > 1 - multiplier)
                 {
                     points.Add(end);
                 }
@@ -94,7 +94,7 @@ namespace RoadsMeshCreator
 
             // Create the verts, they are on left and right of the points
             List<Vector3> verts = new List<Vector3>();
-            for(int i = 0; i < points.Count; i++)
+            for (int i = 0; i < points.Count; i++)
             {
                 verts.Add(new Vector3(points[i].x, points[i].y, roadWidth));
                 verts.Add(new Vector3(points[i].x, points[i].y, -roadWidth));
@@ -102,7 +102,7 @@ namespace RoadsMeshCreator
 
             // Create the uvs
             List<Vector2> uvs = new List<Vector2>();
-            for(int i = 0; i < points.Count; i++)
+            for (int i = 0; i < points.Count; i++)
             {
                 float completionPercent = 1 / (points.Count - 1);
                 uvs.Add(new Vector2(0, completionPercent));
@@ -111,7 +111,7 @@ namespace RoadsMeshCreator
 
             // Create the triangles
             List<int> triangles = new List<int>();
-            for(int i = 0; i < 2 *(points.Count - 1); i+= 2)
+            for (int i = 0; i < 2 * (points.Count - 1); i += 2)
             {
                 triangles.Add(i);
                 triangles.Add(i + 2);
@@ -142,14 +142,14 @@ namespace RoadsMeshCreator
             end -= start;
             start = new Vector2(0, 0);
 
-            for(float i = 0; i < 1; i+= multiplier)
+            for (float i = 0; i < 1; i += multiplier)
             {
                 pointsList.Add(BezierCurves.Quadratic(i, start, mid, end));
             }
 
             // Iterate to get the distance of startPoint and endPoint traveled by the road
             float distance = 0;
-            for(int i = pointsList.Count - 1; i > 1; i--)
+            for (int i = pointsList.Count - 1; i > 1; i--)
             {
                 distance += Vector3.Distance(pointsList[i], pointsList[i - 1]);
             }
@@ -216,7 +216,7 @@ namespace RoadsMeshCreator
             end -= start;
             start = new Vector2(0, 0);
 
-            for(float i = 0; i < 1; i+= multiplier)
+            for (float i = 0; i < 1; i += multiplier)
             {
                 pointsList.Add(BezierCurves.Quadratic(i, start, mid, end));
             }
@@ -327,7 +327,7 @@ namespace RoadsMeshCreator
         // Update the preview continuation (remove the starting points)
         public static Mesh UpdatePreviewMesh(RoadProperties roadProperties, int previewPointsToExclude)
         {
-            if(roadProperties.points.Count <= previewPointsToExclude)
+            if (roadProperties.points.Count <= previewPointsToExclude)
             {
                 return roadProperties.mesh;
             }
@@ -419,7 +419,7 @@ namespace RoadsMeshCreator
             return newMesh;
         }
 
-        
+
 
 
         public static void RemoveFrom<T>(this List<T> lst, int from)
@@ -432,7 +432,7 @@ namespace RoadsMeshCreator
         {
             Mesh newMesh = new Mesh();
             CombineInstance[] combine = new CombineInstance[meshes.Count - 1];
-            for(int i = 0; i < meshes.Count - 1; i++)
+            for (int i = 0; i < meshes.Count - 1; i++)
             {
                 combine[i].mesh = meshes[i];
             }
@@ -463,23 +463,62 @@ namespace RoadsMeshCreator
             }
             pointsList.Add(end);
             */
-            pointsList.Add(end);
-            for (float i = 0; i <= 1; i += multiplier)
+
+            multiplier = 0.01f;
+            float startAngle = 0;
+            float angle = -Mathf.Atan2(end.y - start.y, end.x - start.x) * (180 / Mathf.PI);
+            Debug.Log(angle);
+            float desiredAngle = (Mathf.Abs(angle) * (Mathf.PI/180));
+            Debug.Log(angle);
+            mid += (end / 2);
+
+            int iter = 0;
+
+            Vector2 AB = end - start;
+            Vector2 M = (start + end) / 2;
+            Vector2 F = Vector3.Cross(AB, M);
+            Vector2 uF = F / F.magnitude;
+            float t = Vector3.Distance(M, F);
+            Vector2 C = M + t * uF;
+            C = M + uF * 0.5f * AB.magnitude / Mathf.Tan(Mathf.PI / 2);
+            //CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Hey", startPoint + new Vector3(C.x, 0.2f, C.y), Quaternion.Euler(0, 0, 0));
+
+            for (float i = 0; i < desiredAngle; i += multiplier)
             {
+                iter++;
+                if (iter > 1000)
+                {
+                    break;
+                }
                 //pointsList.Add(start + ((end - start) * i));
                 //float x1 = ;
                 //float y1 = ;
                 //float x2 = ;
                 //float y2 = ;
                 Vector3 current = pointsList[pointsList.Count - 1];
-                float x = Mathf.Pow(roadWidth - end.x * i, 2) + (end.x);
-                float y = Mathf.Pow(roadWidth - end.y * i, 2) + (end.y);
-                pointsList.Add(new Vector2(Mathf.Sqrt(x), Mathf.Sqrt(y)));
+                float x = Mathf.Pow(roadWidth - end.y * i, 2) + (Mathf.Pow(end.x, 2) * i);
+                float y = Mathf.Pow(roadWidth - end.x * i, 2) + (Mathf.Pow(end.y, 2) * i);
+                //pointsList.Add(new Vector2(Mathf.Sqrt(x), Mathf.Sqrt(y)));
+                //pointsList.Add(DrawArcBetweenTwoPoints(start, end, roadWidth, false));
+                /*
+    float tAngle = math.lerp(StartAngle,
+        EndAngle, coord);
+    return Center + (new float2(math.cos(tAngle), 
+        math.sin(tAngle)) * Radius);
+                 */
+
+                float tAngle = Mathf.LerpAngle(startAngle, desiredAngle, i);
+                pointsList.Add(mid + (new Vector2(Mathf.Cos(tAngle),
+                    MathF.Sin(tAngle)) * (roadWidth)));
+                CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Aqui", startPoint + Vector3Extensions.ToVector3(pointsList.Last()), Quaternion.Euler(0, 0, 0));
+                Debug.Log(i);
             }
+            /*
             pointsList.RemoveAt(0);
             pointsList.RemoveAt(1);
             pointsList.RemoveAt(2);
             pointsList.RemoveAt(3);
+            */
             // Iterate to get the distance of startPoint and endPoint traveled by the road
             float distance = 0;
             for (int i = pointsList.Count - 1; i > 1; i--)
@@ -541,13 +580,56 @@ namespace RoadsMeshCreator
             mesh.RecalculateTangents();
             return mesh;
         }
+        // Internet
+        public static Vector2 DrawArcBetweenTwoPoints(Vector2 a, Vector2 b, float radius, bool flip = false)
+        {
+            if (flip)
+            {
+                Vector2 temp = b;
+                b = a;
+                a = temp;
+            }
+
+            // get distance components
+            double x = b.x - a.x, y = b.y - a.y;
+            // get orientation angle
+            var θ = Math.Atan2(y, x);
+            // length between A and B
+            var l = Math.Sqrt(x * x + y * y);
+            if (2 * radius >= l)
+            {
+                // find the sweep angle (actually half the sweep angle)
+                var φ = Math.Asin(l / (2 * radius));
+                // triangle height from the chord to the center
+                var h = radius * Math.Cos(φ);
+                // get center point. 
+                // Use sin(θ)=y/l and cos(θ)=x/l
+                Vector2 C = new Vector2(
+                    (float)(a.x + x / 2 - h * (y / l)),
+                    (float)(a.y + y / 2 + h * (x / l)));
+
+
+                // Conversion factor between radians and degrees
+                const double to_deg = 180 / Math.PI;
+
+                return new Vector2(C.x - radius, C.y - radius);
+                // Draw arc based on square around center and start/sweep angles
+                //g.DrawArc(pen, C.x - radius, C.y - radius, 2 * radius, 2 * radius,
+                //    (float)((θ - φ) * to_deg) - 90, (float)(2 * φ * to_deg));
+            }
+            else
+            {
+                Debug.Log("VÁ SE FODER");
+                return new Vector2();
+            }
+        }
         #endregion
 
         // sla 
-        
+
         public static void eita()
         {
-            Handles.DrawWireArc(new Vector3(0, 0.2f, 0), new Vector3(5,0.2f,5), new Vector3(10, 0.2f, 10), 47, 79);
+            Handles.DrawWireArc(new Vector3(0, 0.2f, 0), new Vector3(5, 0.2f, 5), new Vector3(10, 0.2f, 10), 47, 79);
         }
     }
 }
