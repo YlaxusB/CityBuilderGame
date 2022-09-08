@@ -463,13 +463,12 @@ namespace RoadsMeshCreator
             }
             pointsList.Add(end);
             */
+            pointsList.Add(end);
 
             multiplier = 0.01f;
             float startAngle = 0;
-            float angle = -Mathf.Atan2(end.y - start.y, end.x - start.x) * (180 / Mathf.PI);
-            Debug.Log(angle);
-            float desiredAngle = (Mathf.Abs(angle) * (Mathf.PI/180));
-            Debug.Log(angle);
+            float desiredAngle = (180 * (Mathf.PI/180));
+
             mid += (end / 2);
 
             int iter = 0;
@@ -481,7 +480,7 @@ namespace RoadsMeshCreator
             float t = Vector3.Distance(M, F);
             Vector2 C = M + t * uF;
             C = M + uF * 0.5f * AB.magnitude / Mathf.Tan(Mathf.PI / 2);
-            //CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Hey", startPoint + new Vector3(C.x, 0.2f, C.y), Quaternion.Euler(0, 0, 0));
+            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Hey", startPoint + new Vector3(C.x, 0.2f, C.y), Quaternion.Euler(0, 0, 0));
 
             for (float i = 0; i < desiredAngle; i += multiplier)
             {
@@ -507,18 +506,15 @@ namespace RoadsMeshCreator
         math.sin(tAngle)) * Radius);
                  */
 
-                float tAngle = Mathf.LerpAngle(startAngle, desiredAngle, i);
+                float tAngle = Mathf.Lerp(0, desiredAngle, i);
                 pointsList.Add(mid + (new Vector2(Mathf.Cos(tAngle),
                     MathF.Sin(tAngle)) * (roadWidth)));
                 CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Aqui", startPoint + Vector3Extensions.ToVector3(pointsList.Last()), Quaternion.Euler(0, 0, 0));
-                Debug.Log(i);
             }
-            /*
             pointsList.RemoveAt(0);
             pointsList.RemoveAt(1);
             pointsList.RemoveAt(2);
             pointsList.RemoveAt(3);
-            */
             // Iterate to get the distance of startPoint and endPoint traveled by the road
             float distance = 0;
             for (int i = pointsList.Count - 1; i > 1; i--)
