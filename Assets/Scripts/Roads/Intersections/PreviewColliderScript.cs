@@ -153,7 +153,7 @@ public class PreviewColliderScript : MonoBehaviour
         Vector3 endCollidedRoad = firstCollidedObject.transform.position +
             (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
 
-        continuationObject.transform.position = new Vector3(endCollidedRoad.x, 0.2f, endCollidedRoad.z);
+        continuationObject.transform.position = new Vector3(transform.position.x, 0.2f, transform.position.z);
         continuationObject.transform.rotation = Quaternion.Euler(90, 0, 0);
         // The end of previous road
         endCollidedRoad = firstCollidedObject.transform.position +
@@ -166,7 +166,7 @@ public class PreviewColliderScript : MonoBehaviour
         Vector3 midPoint = transform.position;
 
         // Create and apply the new mesh
-        continuationMeshFilter.mesh = RoadMesh.CreateStraightContinuationMesh(endCollidedRoad, midPoint, previewStart, 0.01f, firstProperties.width);
+        continuationMeshFilter.mesh = RoadMesh.CreateStraightContinuationMesh(endCollidedRoad, midPoint, previewStart, 0.01f, firstProperties.width, firstCollidedObject.transform.rotation.y);
         //AdjustContinuation(firstCollidedObject, gameObject, continuationObject);
         return continuationObject;
     }

@@ -441,7 +441,7 @@ namespace RoadsMeshCreator
         }
 
         // Create straight continued mesh
-        public static Mesh CreateStraightContinuationMesh(Vector3 startPoint, Vector3 midPoint, Vector3 endPoint, float multiplier, float roadWidth)
+        public static Mesh CreateStraightContinuationMesh(Vector3 startPoint, Vector3 midPoint, Vector3 endPoint, float multiplier, float roadWidth, float startAngle)
         {
             List<Vector2> pointsList = new List<Vector2>();
             //pointsList.Add(new Vector2(startPoint.x - 0.01f, startPoint.z));
@@ -463,58 +463,38 @@ namespace RoadsMeshCreator
             }
             pointsList.Add(end);
             */
-            pointsList.Add(end);
 
             multiplier = 0.01f;
-            float startAngle = 0;
-            float desiredAngle = (180 * (Mathf.PI/180));
+            //float startAngle = 0;
+            float angle = -Mathf.Atan2(end.y - start.y, end.x - start.x) * (180 / Mathf.PI);
+            Debug.Log(angle);
+            float ang = MathF.Abs(startAngle) - MathF.Abs(angle);
+            float desiredAngle = (Mathf.Abs(ang) * (Mathf.PI/180));
+            Debug.Log(desiredAngle * (180/MathF.PI));
 
-            mid += (end / 2);
+            //mid += (end / 2);
 
             int iter = 0;
-
-            Vector2 AB = end - start;
-            Vector2 M = (start + end) / 2;
-            Vector2 F = Vector3.Cross(AB, M);
-            Vector2 uF = F / F.magnitude;
-            float t = Vector3.Distance(M, F);
-            Vector2 C = M + t * uF;
-            C = M + uF * 0.5f * AB.magnitude / Mathf.Tan(Mathf.PI / 2);
-            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Hey", startPoint + new Vector3(C.x, 0.2f, C.y), Quaternion.Euler(0, 0, 0));
 
             for (float i = 0; i < desiredAngle; i += multiplier)
             {
                 iter++;
-                if (iter > 1000)
+                if (iter > 10000)
                 {
+                    Debug.Log("porra");
                     break;
                 }
-                //pointsList.Add(start + ((end - start) * i));
-                //float x1 = ;
-                //float y1 = ;
-                //float x2 = ;
-                //float y2 = ;
-                Vector3 current = pointsList[pointsList.Count - 1];
-                float x = Mathf.Pow(roadWidth - end.y * i, 2) + (Mathf.Pow(end.x, 2) * i);
-                float y = Mathf.Pow(roadWidth - end.x * i, 2) + (Mathf.Pow(end.y, 2) * i);
-                //pointsList.Add(new Vector2(Mathf.Sqrt(x), Mathf.Sqrt(y)));
-                //pointsList.Add(DrawArcBetweenTwoPoints(start, end, roadWidth, false));
-                /*
-    float tAngle = math.lerp(StartAngle,
-        EndAngle, coord);
-    return Center + (new float2(math.cos(tAngle), 
-        math.sin(tAngle)) * Radius);
-                 */
-
+                Debug.Log("a");
                 float tAngle = Mathf.Lerp(0, desiredAngle, i);
+                Debug.Log("b");
                 pointsList.Add(mid + (new Vector2(Mathf.Cos(tAngle),
                     MathF.Sin(tAngle)) * (roadWidth)));
-                CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Aqui", startPoint + Vector3Extensions.ToVector3(pointsList.Last()), Quaternion.Euler(0, 0, 0));
+                Debug.Log("c");
+                //CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Aqui", startPoint + Vector3Extensions.ToVector3(pointsList.Last()), Quaternion.Euler(0, 0, 0));
+                Debug.Log("d");
             }
-            pointsList.RemoveAt(0);
-            pointsList.RemoveAt(1);
-            pointsList.RemoveAt(2);
-            pointsList.RemoveAt(3);
+            Debug.Log("e");
+            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Mid", startPoint + new Vector3(mid.x, 0.0f, mid.y), Quaternion.Euler(0, 0, 0));
             // Iterate to get the distance of startPoint and endPoint traveled by the road
             float distance = 0;
             for (int i = pointsList.Count - 1; i > 1; i--)
