@@ -153,7 +153,7 @@ public class PreviewColliderScript : MonoBehaviour
         Vector3 endCollidedRoad = firstCollidedObject.transform.position +
             (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
 
-        continuationObject.transform.position = new Vector3(transform.position.x, 0.2f, transform.position.z);
+        continuationObject.transform.position = new Vector3(endCollidedRoad.x, 0.2f, endCollidedRoad.z);
         continuationObject.transform.rotation = Quaternion.Euler(90, 0, 0);
         // The end of previous road
         endCollidedRoad = firstCollidedObject.transform.position +
@@ -166,9 +166,46 @@ public class PreviewColliderScript : MonoBehaviour
         Vector3 midPoint = transform.position;
 
         // Create and apply the new mesh
-        continuationMeshFilter.mesh = RoadMesh.CreateStraightContinuationMesh(endCollidedRoad, midPoint, previewStart, 0.01f, firstProperties.width, firstCollidedObject.transform.rotation.y);
+        Vector3 mid2 = endCollidedRoad + (firstCollidedObject.transform.TransformDirection(new Vector3(Vector3.Distance(previewStart, endCollidedRoad) ,0,0)));
+        List<Vector2> anchorPoints = new List<Vector2>();
+        anchorPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad));
+        anchorPoints.Add(Vector3Extensions.ToVector2(previewStart));
+        List<Vector2> controlPoints = new List<Vector2>();
+        float dist = Vector3.Distance(endCollidedRoad, previewStart);
+        Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(new Vector3(-(dist / MathF.PI), 0, 0)));
+        //Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(previewProperties.points[0]) - transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
+        Debug.Log(-Vector3.Distance(ctrl2, previewStart));
+
+        controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(dist / Mathf.PI, 0,0))));
+        controlPoints.Add(ctrl2);
+        //controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(Vector3.Distance(anchorPoints[0], controlPoints[0]), 0, 0))));
+        Vector3 intersection = new Vector3();
+
+
+        continuationMeshFilter.mesh = RoadMesh.CreateStraightContinuationMesh(anchorPoints, controlPoints, 0.001f, firstProperties.width);
         //AdjustContinuation(firstCollidedObject, gameObject, continuationObject);
         return continuationObject;
+    }
+    public static bool LineLineIntersection(out Vector3 intersection, Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
+    {
+        Vector3 lineVec3 = linePoint2 - linePoint1;
+        Vector3 crossVec1and2 = Vector3.Cross(lineVec1, lineVec2);
+        Vector3 crossVec3and2 = Vector3.Cross(lineVec3, lineVec2);
+
+        float planarFactor = Vector3.Dot(lineVec3, crossVec1and2);
+
+        //is coplanar, and not parrallel
+        if (Mathf.Abs(planarFactor) < 0.0001f && crossVec1and2.sqrMagnitude > 0.0001f)
+        {
+            float s = Vector3.Dot(crossVec3and2, crossVec1and2) / crossVec1and2.sqrMagnitude;
+            intersection = linePoint1 + (lineVec1 * s);
+            return true;
+        }
+        else
+        {
+            intersection = Vector3.zero;
+            return false;
+        }
     }
     // Adjust continuation
     public void AdjustContinuation(GameObject collidedObject, GameObject previewObject, GameObject continuationObject)

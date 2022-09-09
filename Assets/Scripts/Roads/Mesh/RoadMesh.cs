@@ -361,7 +361,11 @@ namespace RoadsMeshCreator
             List<Vector2> newUvs = new List<Vector2>();//oldMesh.uv.ToList();
             for (int i = 0; i < roadProperties.points.Count; i++)
             {
-                float completionPercent = 1 / (roadProperties.points.Count - 1);
+                float completionPercent = 0;
+                if (roadProperties.points.Count - 1 != 0)
+                {
+                    completionPercent = 1 / (roadProperties.points.Count - 1);
+                }
                 newUvs.Add(new Vector2(0, completionPercent));
                 newUvs.Add(new Vector2(1, completionPercent));
             }
@@ -369,7 +373,7 @@ namespace RoadsMeshCreator
             Mesh newMesh = new Mesh();
             newMesh.vertices = newVertices.ToArray();
             newMesh.triangles = newTriangles.ToArray();
-            newMesh.uv = newUvs.ToArray();
+            //newMesh.uv = newUvs.ToArray();
             return newMesh;
         }
 
@@ -441,16 +445,23 @@ namespace RoadsMeshCreator
         }
 
         // Create straight continued mesh
-        public static Mesh CreateStraightContinuationMesh(Vector3 startPoint, Vector3 midPoint, Vector3 endPoint, float multiplier, float roadWidth, float startAngle)
+        public static Mesh CreateStraightContinuationMesh(List<Vector2> anchorPoints, List<Vector2> controlPoints, float multiplier, float roadWidth)
         {
             List<Vector2> pointsList = new List<Vector2>();
+            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "ANC1", new Vector3(0, 0.2f, 0) + Vector3Extensions.ToVector3(anchorPoints[0]), Quaternion.Euler(0, 0, 0));
+            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "CTR1", new Vector3(0, 0.2f, 0) + Vector3Extensions.ToVector3(controlPoints[0]), Quaternion.Euler(0, 0, 0));
+            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "CTR2", new Vector3(0, 0.2f, 0) + Vector3Extensions.ToVector3(controlPoints[1]), Quaternion.Euler(0, 0, 0));
+            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "ANC2", new Vector3(0, 0.2f, 0) + Vector3Extensions.ToVector3(anchorPoints[1]), Quaternion.Euler(0, 0, 0));
             //pointsList.Add(new Vector2(startPoint.x - 0.01f, startPoint.z));
-            Vector2 start = Vector3Extensions.ToVector2(startPoint);
-            Vector2 mid = Vector3Extensions.ToVector2(midPoint);
-            Vector2 end = Vector3Extensions.ToVector2(endPoint);
-            mid -= start;
+            Vector2 start = anchorPoints[0];
+            Vector2 end = anchorPoints[1];
             end -= start;
+            anchorPoints[0] -= start;
+            anchorPoints[1] -= start;
+            controlPoints[0] -= start;
+            controlPoints[1] -= start;
             start = new Vector2(0, 0);
+            pointsList.Add(start);
 
             /*
             pointsList.Add(start);
@@ -458,43 +469,37 @@ namespace RoadsMeshCreator
             {
                 Vector2 p0 = Vector2.Lerp(start, mid, i);
                 Vector2 p1 = Vector2.Lerp(mid, end, i);
-                
+
                 pointsList.Add(Vector2.Lerp(p0, p1, i));
             }
             pointsList.Add(end);
             */
 
-            multiplier = 0.01f;
-            //float startAngle = 0;
-            float angle = -Mathf.Atan2(end.y - start.y, end.x - start.x) * (180 / Mathf.PI);
-            Debug.Log(angle);
-            float ang = MathF.Abs(startAngle) - MathF.Abs(angle);
-            float desiredAngle = (Mathf.Abs(ang) * (Mathf.PI/180));
-            Debug.Log(desiredAngle * (180/MathF.PI));
-
+            Debug.Log("b");
             //mid += (end / 2);
-
-            int iter = 0;
-
-            for (float i = 0; i < desiredAngle; i += multiplier)
+            for (float i = 0; i < 1; i += multiplier)
             {
-                iter++;
-                if (iter > 10000)
-                {
-                    Debug.Log("porra");
-                    break;
-                }
+                /*
                 Debug.Log("a");
-                float tAngle = Mathf.Lerp(0, desiredAngle, i);
+                float tAngle = Mathf.Lerp(0, angle * (MathF.PI / 180) / 2, i);
                 Debug.Log("b");
                 pointsList.Add(mid + (new Vector2(Mathf.Cos(tAngle),
-                    MathF.Sin(tAngle)) * (roadWidth)));
+                    MathF.Sin(tAngle)) * (roadWidth * 2)));
                 Debug.Log("c");
+                */
+                Debug.Log("c");
+                Vector2 bezierPoint = BezierCurves.Cubic(i, anchorPoints[0], controlPoints[0], controlPoints[1], anchorPoints[1]);
+                pointsList.Add(bezierPoint);
+                
+                //pointsList.Add(Vector3Extensions.ToVector2(BezierCurves.Cubic(i, startPoint, mid2 - startPoint, mid2 - startPoint, endPoint)));
+                //Vector3 a = Vector3.Lerp(Vector3Extensions.ToVector3(start), Vector3Extensions.ToVector3(mid), i);
+                //Vector3 b = Vector3.Lerp(Vector3Extensions.ToVector3(mid), Vector3Extensions.ToVector3(end), i);
+                //pointsList.Add(Vector3Extensions.ToVector2(Vector3.Slerp(a, b, i)));
                 //CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Aqui", startPoint + Vector3Extensions.ToVector3(pointsList.Last()), Quaternion.Euler(0, 0, 0));
                 Debug.Log("d");
             }
+            pointsList.Add(anchorPoints[1]);
             Debug.Log("e");
-            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Mid", startPoint + new Vector3(mid.x, 0.0f, mid.y), Quaternion.Euler(0, 0, 0));
             // Iterate to get the distance of startPoint and endPoint traveled by the road
             float distance = 0;
             for (int i = pointsList.Count - 1; i > 1; i--)
@@ -557,6 +562,20 @@ namespace RoadsMeshCreator
             return mesh;
         }
         // Internet
+        public static Vector3 CenterOfVectors(this List<Vector3> vectors)
+        {
+            Vector3 sum = Vector3.zero;
+            if (vectors == null || vectors.Count == 0)
+            {
+                return sum;
+            }
+
+            foreach (Vector3 vec in vectors)
+            {
+                sum += vec;
+            }
+            return sum / vectors.Count;
+        }
         public static Vector2 DrawArcBetweenTwoPoints(Vector2 a, Vector2 b, float radius, bool flip = false)
         {
             if (flip)
