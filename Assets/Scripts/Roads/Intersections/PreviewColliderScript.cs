@@ -33,9 +33,12 @@ public class PreviewColliderScript : MonoBehaviour
                 RoadProperties previewProperties = gameObject.GetComponent<RoadProperties>();
 
                 // The points that will be excluded, to create their connections
-                float firstPointsToExclude = Mathf.Ceil(firstProperties.width / 10) + 1;
-                float previewPointsToExclude = Mathf.Ceil(previewProperties.width / 10) + 1;
-                Mesh newMesh = RoadMesh.UpdatePreviousMesh(firstProperties, ((int)firstPointsToExclude));
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                float firstPointsToExclude = Mathf.Ceil(firstProperties.width * 1);
+                float previewPointsToExclude = Mathf.Ceil(previewProperties.width * 1);
+                //previewPointsToExclude = firstPointsToExclude;
+                // Remove the last points of collided road
+                Mesh newMesh = RoadMesh.UpdatePreviousMesh(firstProperties, ((int)(firstPointsToExclude * 0.75f)));
 
                 // Delete the last x points of the previous road mesh
                 MeshFilter firstCollidedMeshFilter = firstCollidedObject.gameObject.GetComponent<MeshFilter>();
@@ -43,7 +46,7 @@ public class PreviewColliderScript : MonoBehaviour
 
                 // Delete the first x points of this preview road mesh
                 gameObject.GetComponent<MeshFilter>().mesh = RoadMesh.UpdatePreviewMesh(previewProperties,
-                    ((int)previewPointsToExclude));
+                    ((int)(previewPointsToExclude * 0.75f) + 1));
 
                 // Continuation mesh
                 /*
@@ -94,8 +97,8 @@ public class PreviewColliderScript : MonoBehaviour
                 // How many points will be exluded when a road is pointing left or right (in relation to previous road)
                 // pointing to a side will be there more colliing points, so the width divided by 5 (5 is the spacing between road points and)
                 // is the quantity of points needed to exclude (+ 1 because the last point is less than 5 spacing)
-                float firstPointsToExclude = Mathf.Ceil(firstProperties.width / 5) + 1;
-                float previewPointsToExclude = Mathf.Ceil(previewProperties.width / 5) + 1;
+                float firstPointsToExclude = Mathf.Ceil(firstProperties.width / 7) + 1;
+                float previewPointsToExclude = Mathf.Ceil(previewProperties.width / 1) + 1;
                 // Keep removing 
                 //MeshFilter filter = gameObject.GetComponent<MeshFilter>();
                 //filter.mesh = RoadMesh.UpdatePreviewMesh(previewProperties, ((int)previewPointsToExclude));
@@ -172,13 +175,14 @@ public class PreviewColliderScript : MonoBehaviour
         anchorPoints.Add(Vector3Extensions.ToVector2(previewStart));
         List<Vector2> controlPoints = new List<Vector2>();
         float dist = Vector3.Distance(endCollidedRoad, previewStart);
-        Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(new Vector3(-(dist / MathF.PI), 0, 0)));
+        Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
         //Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(previewProperties.points[0]) - transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
         Debug.Log(-Vector3.Distance(ctrl2, previewStart));
-
-        controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(dist / Mathf.PI, 0,0))));
+        //controlPoints.Add(endCollidedRoad + ((previewStart - endCollidedRoad) / 2));
+        //controlPoints.Add(endCollidedRoad + ((previewStart - endCollidedRoad) / 2));
+        //controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(dist / 2, 0,0))));
         controlPoints.Add(ctrl2);
-        //controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(Vector3.Distance(anchorPoints[0], controlPoints[0]), 0, 0))));
+        controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(Vector3.Distance(anchorPoints[0], controlPoints[0]), 0, 0))));
         Vector3 intersection = new Vector3();
 
 
