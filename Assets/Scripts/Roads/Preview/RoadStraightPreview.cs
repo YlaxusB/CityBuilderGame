@@ -11,12 +11,16 @@ namespace Preview
     public static class StraightPreview
     {
         // Straight Preview (The preview when you choose a initial point)
-        public static GameObject Create(RoadProperties roadProperties, List<Vector3> points)
+        public static GameObject Create(RoadProperties roadProperties, List<Vector3> points, bool continuation)
         {
             // Create the initial plane
             GameObject previewRoad = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            previewRoad.transform.position = new Vector3(Mathf.Round(points[0].x), roadProperties.height, Mathf.Round(points[0].z)) ;//Raycasts.raycastLayer(roadProperties.camera, "Terrain") + new Vector3(0, roadProperties.height, 0);
+            previewRoad.transform.position = new Vector3(Mathf.Round(points[0].x), roadProperties.height, Mathf.Round(points[0].z));//Raycasts.raycastLayer(roadProperties.camera, "Terrain") + new Vector3(0, roadProperties.height, 0);
             previewRoad.transform.rotation = Quaternion.Euler(180, 0, 0);
+            if (continuation)
+            {
+                //previewRoad.transform.position += previewRoad.transform.TransformDirection(new Vector3(5, 0, 0));
+            }
             previewRoad.name = "Straight Preview Road";
 
             // Material and textures
@@ -47,31 +51,43 @@ namespace Preview
 
         public static IEnumerator Update(GameObject road, RoadProperties roadProperties, List<Vector3> points, bool continuation)
         {
+            float distanceFromPreviousRoad = roadProperties.width * 2f;
+            Vector3 pos = points[0] - road.transform.TransformDirection(new Vector3(distanceFromPreviousRoad, 0, 0));
             bool canRun = true;
             while (canRun && points.Count > 0)
             {
                 MeshFilter roadMeshFilter = road.GetComponent<MeshFilter>();
                 Vector3 endPosition = Raycasts.raycastPosition3D(roadProperties.camera);
-                // Update Mesh
-               Mesh newMesh = RoadMesh.CreateStraightMesh(points[0],
+                //wapoints[0] = pos + road.transform.TransformDirection(new Vector3(10, 0, 0));
+
+                // Rotate road 
+                float angle = -Mathf.Atan2(Mathf.Round(endPosition.z) - Mathf.Round(points[0].z),
+                    Mathf.Round(endPosition.x) - Mathf.Round(points[0].x)) * (180 / Mathf.PI);
+                road.transform.rotation = Quaternion.Euler(0, Mathf.Round(angle), 0);
+
+                // Update Mesh //
+                road.transform.position = pos + road.transform.TransformDirection(new Vector3(distanceFromPreviousRoad, 0, 0));
+                Mesh newMesh = RoadMesh.CreateStraightMesh(points[0],
                     endPosition, 0.1f, roadProperties.width, roadProperties).mesh;
                 roadProperties.mesh = newMesh;
+
                 if (continuation)
                 {
-                    roadMeshFilter.mesh = RoadMesh.UpdatePreviewMesh(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)));
+                    road.transform.position -= new Vector3(0, 0.8f, 0);
+                    roadMeshFilter.mesh = newMesh;
+                    //roadMeshFilter.mesh = RoadMesh.UpdatePreviewMesh(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)));
                 }
                 else
                 {
                     roadMeshFilter.mesh = newMesh;
                 }
-                float angle = -Mathf.Atan2(Mathf.Round(endPosition.z) - Mathf.Round(points[0].z),
-                    Mathf.Round(endPosition.x) - Mathf.Round(points[0].x)) * (180 / Mathf.PI);
-                road.transform.rotation = Quaternion.Euler(0, Mathf.Round(angle), 0);
+
+
                 //road.transform.ro
 
                 // Check colliding and create intersections
                 MeshCollider roadMeshCollider = road.GetComponent<MeshCollider>();
-                if(roadMeshFilter.mesh.vertexCount > 5)
+                if (roadMeshFilter.mesh.vertexCount > 5)
                 {
                     roadMeshCollider.sharedMesh = roadMeshFilter.mesh;
                 }

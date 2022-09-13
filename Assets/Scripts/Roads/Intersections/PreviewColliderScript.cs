@@ -38,9 +38,13 @@ public class PreviewColliderScript : MonoBehaviour
 
                 // Removes the points of the first road starting from end
                 MeshFilter firstMeshFilter = firstRoad.GetComponent<MeshFilter>();
-                Mesh newMesh = RoadMesh.RemoveMeshPoints(firstProperties, ((int)firstPointsToExclude), false);
-                firstMeshFilter.mesh = newMesh;
-                firstProperties.mesh = newMesh;
+                Debug.Log("AAAAAAAAAAAAAAAAAAA");
+                Debug.Log(firstRoad.transform.TransformDirection(new Vector3(lastProperties.width, 0, 0)));
+                Debug.Log(transform.position);
+                transform.position += firstRoad.transform.TransformDirection(new Vector3(lastProperties.width * 10,0,0));
+                //Mesh newMesh = RoadMesh.RemoveMeshPoints(firstProperties, ((int)firstPointsToExclude), false);
+                //firstMeshFilter.mesh = newMesh;
+                //firstProperties.mesh = newMesh;
 
                 // Creates the junction object
                 junctionObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
@@ -53,6 +57,7 @@ public class PreviewColliderScript : MonoBehaviour
                 // Junction Positioning
                 junctionObject.transform.position = firstRoadEnd;
                 junctionObject.transform.rotation = Quaternion.Euler(90, 0, 0);
+                junctionObject.GetComponent<MeshFilter>().mesh = lastProperties.mesh;
 
                 MeshFilter junctionMeshFilter = junctionObject.GetComponent<MeshFilter>();
 
@@ -94,8 +99,8 @@ public class PreviewColliderScript : MonoBehaviour
 
             // Control Points
             List<Vector2> controlPoints = new List<Vector2>();
-            controlPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd + firstRoad.transform.TransformDirection(new Vector3(Vector3.Distance(secondRoadStart, firstRoadEnd) / MathF.PI, 0, 0))));
-            controlPoints.Add(Vector3Extensions.ToVector2(secondRoadStart + transform.TransformDirection(new Vector3(-Vector3.Distance(secondRoadStart, firstRoadEnd) / MathF.PI, 0, 0))));
+            controlPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd + firstRoad.transform.TransformDirection(new Vector3(Vector3.Distance(secondRoadStart, firstRoadEnd) / 2f, 0, 0))));
+            controlPoints.Add(Vector3Extensions.ToVector2(secondRoadStart + transform.TransformDirection(new Vector3(-Vector3.Distance(secondRoadStart, firstRoadEnd) / 2f, 0, 0))));
 
             controlPoints[0] -= Vector3Extensions.ToVector2(firstRoadEnd);
             controlPoints[1] -= Vector3Extensions.ToVector2(firstRoadEnd);
@@ -136,8 +141,8 @@ public class PreviewColliderScript : MonoBehaviour
 
         // Control Points
         List<Vector2> controlPoints = new List<Vector2>();
-        controlPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd + firstRoad.transform.TransformDirection(new Vector3(Vector3.Distance(secondRoadStart, firstRoadEnd) / MathF.PI, 0, 0))));
-        controlPoints.Add(Vector3Extensions.ToVector2(secondRoadStart + transform.TransformDirection(new Vector3(-Vector3.Distance(secondRoadStart, firstRoadEnd) / MathF.PI, 0,0))));
+        controlPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd + firstRoad.transform.TransformDirection(new Vector3(Vector3.Distance(secondRoadStart, firstRoadEnd) / 2f, 0, 0))));
+        controlPoints.Add(Vector3Extensions.ToVector2(secondRoadStart + transform.TransformDirection(new Vector3(-Vector3.Distance(secondRoadStart, firstRoadEnd) / 2f, 0,0))));
 
         Debugger.Primitive(PrimitiveType.Cube, "1", firstRoadEnd + Vector3Extensions.ToVector3(anchorPoints[0]), Quaternion.Euler(0, 0, 0));
         Debugger.Primitive(PrimitiveType.Cube, "2", Vector3Extensions.ToVector3(controlPoints[0]), Quaternion.Euler(0, 0, 0));

@@ -114,7 +114,7 @@ public class GetRoad : MonoBehaviour
             if (points.Count == 1)
             {
                 // Straight
-                previewRoad = StraightPreview.Create(roadProperties, points);
+                previewRoad = StraightPreview.Create(roadProperties, points, continuation);
                 StartCoroutine(StraightPreview.Update(previewRoad, roadProperties, points, continuation));
             }
             else if (points.Count == 2)
@@ -155,7 +155,7 @@ public class GetRoad : MonoBehaviour
                 points = new List<Vector3>() { points[0] };
                 StopAllCoroutines();
                 Destroy(previewRoad);
-                previewRoad = StraightPreview.Create(roadProperties, points);
+                previewRoad = StraightPreview.Create(roadProperties, points, continuation);
                 StartCoroutine(StraightPreview.Update(previewRoad, roadProperties, points, continuation));
             }
             else if (points.Count > 2)

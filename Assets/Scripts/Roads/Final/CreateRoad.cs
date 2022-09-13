@@ -46,6 +46,7 @@ public class CreateRoad : MonoBehaviour
         roadProperties = RoadMesh.CreateStraightMesh(points[0], points[1], multiplier, roadProperties.width, roadProperties);
 
         // Check if its a continuation
+
         if (continuation)
         {
             Mesh newMesh = RoadMesh.UpdatePreviewMesh(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)));
