@@ -85,7 +85,7 @@ public class GetRoad : MonoBehaviour
                     CreateRoad.Straight(points, roadProperties, continuation);
                     //CreateRoad.StraightContinuation();
                     PreviewColliderScript colliderScript = previewRoad.GetComponent<PreviewColliderScript>();
-                    GameObject roadContinuation = colliderScript.GetContinuation();
+                    GameObject roadContinuation = colliderScript.BuildContinuation();
                     colliderScript.InsertProperties(roadProperties, roadContinuation);
                     colliderScript.DestroyContinuation();
                 }

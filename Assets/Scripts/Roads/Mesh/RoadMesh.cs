@@ -272,8 +272,65 @@ namespace RoadsMeshCreator
             mesh.uv = uvs;
             return mesh;
         }
-
+        
+        /*--- Junctions ---*/
+        
         #region Junctions
+        // Removes the specified amount of vertices from start or end of a mesh
+        public static Mesh RemoveMeshPoints(RoadProperties roadProperties, int pointsToExclude, bool isFromStart)
+        {
+            Mesh oldMesh = roadProperties.mesh;
+            List<Vector3> oldVertices = oldMesh.vertices.ToList();
+
+            // Removes the vertices of start or end
+            if (isFromStart)
+            {
+                oldVertices.RemoveRange(0, pointsToExclude * 2);
+            }
+            else
+            {
+                oldVertices.RemoveRange(oldVertices.Count - (pointsToExclude * 2), pointsToExclude * 2);
+            }
+            List<Vector3> newVertices = oldVertices;
+
+            RoadProperties newRoadProperties = roadProperties;
+            //newRoadProperties.points.remove(newRoadProperties.points.Count - 1 - pointsToExclude, pointsToExclude - 1);
+
+            RemoveFrom(newRoadProperties.points, newRoadProperties.points.Count - pointsToExclude);
+            Debug.Log(newRoadProperties.points.Count);
+
+
+            List<int> newTriangles = new List<int>();//oldMesh.triangles.ToList();
+            for (int i = 0; i < 2 * (roadProperties.points.Count - 1); i += 2)
+            {
+                newTriangles.Add(i);
+                newTriangles.Add(i + 2);
+                newTriangles.Add(i + 1);
+
+                newTriangles.Add(i + 1);
+                newTriangles.Add(i + 2);
+                newTriangles.Add(i + 3);
+            }
+
+            List<Vector2> newUvs = new List<Vector2>();//oldMesh.uv.ToList();
+            for (int i = 0; i < roadProperties.points.Count; i++)
+            {
+                float completionPercent = 1 / (roadProperties.points.Count - 1);
+                newUvs.Add(new Vector2(0, completionPercent));
+                newUvs.Add(new Vector2(1, completionPercent));
+            }
+
+            Mesh newMesh = new Mesh();
+            newMesh.vertices = newVertices.ToArray();
+            newMesh.triangles = newTriangles.ToArray();
+            newMesh.uv = newUvs.ToArray();
+            return newMesh;
+        }
+        #endregion
+
+
+        #region Old Junctions
+
 
         // Road Continuation
 
@@ -620,11 +677,6 @@ namespace RoadsMeshCreator
         }
         #endregion
 
-        // sla 
-
-        public static void eita()
-        {
-            Handles.DrawWireArc(new Vector3(0, 0.2f, 0), new Vector3(5, 0.2f, 5), new Vector3(10, 0.2f, 10), 47, 79);
-        }
+        
     }
 }
