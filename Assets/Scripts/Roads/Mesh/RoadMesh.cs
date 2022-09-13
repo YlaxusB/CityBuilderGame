@@ -505,10 +505,6 @@ namespace RoadsMeshCreator
         public static Mesh CreateStraightContinuationMesh(List<Vector2> anchorPoints, List<Vector2> controlPoints, float multiplier, float roadWidth)
         {
             List<Vector2> pointsList = new List<Vector2>();
-            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "ANC1", new Vector3(0, 0.2f, 0) + Vector3Extensions.ToVector3(anchorPoints[0]), Quaternion.Euler(0, 0, 0));
-            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "CTR1", new Vector3(0, 0.2f, 0) + Vector3Extensions.ToVector3(controlPoints[0]), Quaternion.Euler(0, 0, 0));
-            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "CTR2", new Vector3(0, 0.2f, 0) + Vector3Extensions.ToVector3(controlPoints[1]), Quaternion.Euler(0, 0, 0));
-            CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "ANC2", new Vector3(0, 0.2f, 0) + Vector3Extensions.ToVector3(anchorPoints[1]), Quaternion.Euler(0, 0, 0));
             //pointsList.Add(new Vector2(startPoint.x - 0.01f, startPoint.z));
             Vector2 start = anchorPoints[0];
             Vector2 end = anchorPoints[1];

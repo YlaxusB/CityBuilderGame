@@ -14,6 +14,7 @@ public class PreviewColliderScript : MonoBehaviour
 
     float firstPointsToExclude = 0;
     float lastPointsToExclude = 0;
+    GameObject junctionObject;
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -33,7 +34,7 @@ public class PreviewColliderScript : MonoBehaviour
                 RoadProperties lastProperties = gameObject.GetComponent<RoadProperties>();
                 // The points that will be excluded, to create the junction
                 firstPointsToExclude = Mathf.Ceil(firstProperties.width * 1);
-                lastPointsToExclude = Mathf.Ceil(lastProperties.width * 1);
+                lastPointsToExclude = Mathf.Ceil(lastProperties.width * 0.5f);
 
                 // Removes the points of the first road starting from end
                 MeshFilter firstMeshFilter = firstRoad.GetComponent<MeshFilter>();
@@ -42,7 +43,7 @@ public class PreviewColliderScript : MonoBehaviour
                 firstProperties.mesh = newMesh;
 
                 // Creates the junction object
-                GameObject junctionObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                junctionObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
                 junctionObject.name = "Junction Object";
 
                 // Takes the end of the first road
@@ -61,7 +62,7 @@ public class PreviewColliderScript : MonoBehaviour
                     (transform.TransformDirection(secondProperties.points[secondProperties.points.Count - 1]));
                 Vector3 midPosition = firstRoadEnd + (secondRoadStart - firstRoadEnd);
 
-                StartCoroutine(UpdateJunctionPreview());
+                StartCoroutine(UpdateJunctionPreview(0.03f));
 
             }
         }
@@ -69,24 +70,39 @@ public class PreviewColliderScript : MonoBehaviour
     }
 
     // Loop to update the junction preview
-    private IEnumerator UpdateJunctionPreview()
+    private IEnumerator UpdateJunctionPreview(float multiplier)
     {
         while (true)
         {
             RoadProperties firstProperties = firstRoad.gameObject.GetComponent<RoadProperties>();
             RoadProperties secondProperties = gameObject.GetComponent<RoadProperties>();
 
-            GameObject junctionObject = GameObject.Find("continuation object");
             MeshFilter junctionMeshFilter = junctionObject.GetComponent<MeshFilter>();
 
             // End, Start and Mid of the junction
             Vector3 firstRoadEnd = firstRoad.transform.position +
-                (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1] - new Vector3(0.5f, 0, 0)));
-            Vector3 secondRoadStart = transform.position + (transform.TransformDirection(secondProperties.points[0]) + new Vector3(0.5f, 0, 0));
+                (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
+            Vector3 secondRoadStart = transform.position + (transform.TransformDirection(secondProperties.points[0]));
+            secondRoadStart = new Vector3((float)(secondRoadStart.x * 100f) / 100f,
+                (float)(secondRoadStart.y * 100f) / 100f, (float)(secondRoadStart.z * 100f) / 100f);
             Vector3 midPosition = firstRoadEnd + (secondRoadStart - firstRoadEnd);
 
-            // Create and apply the new mesh
-            junctionMeshFilter.mesh = RoadMesh.CreateBezierMesh(firstRoadEnd, midPosition, secondRoadStart, 0.01f, firstProperties.width);
+            // Anchor Points
+            List<Vector2> anchorPoints = new List<Vector2>();
+            anchorPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd - firstRoadEnd));
+            anchorPoints.Add(Vector3Extensions.ToVector2(secondRoadStart - firstRoadEnd));
+
+            // Control Points
+            List<Vector2> controlPoints = new List<Vector2>();
+            controlPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd + firstRoad.transform.TransformDirection(new Vector3(Vector3.Distance(secondRoadStart, firstRoadEnd) / MathF.PI, 0, 0))));
+            controlPoints.Add(Vector3Extensions.ToVector2(secondRoadStart + transform.TransformDirection(new Vector3(-Vector3.Distance(secondRoadStart, firstRoadEnd) / MathF.PI, 0, 0))));
+
+            controlPoints[0] -= Vector3Extensions.ToVector2(firstRoadEnd);
+            controlPoints[1] -= Vector3Extensions.ToVector2(firstRoadEnd);
+
+            MeshFilter continuationMeshFilter = junctionObject.GetComponent<MeshFilter>();
+            continuationMeshFilter.mesh =
+                RoadMesh.CreateStraightContinuationMesh(anchorPoints, controlPoints, multiplier, firstProperties.width);
 
             yield return null;
         }
@@ -94,20 +110,19 @@ public class PreviewColliderScript : MonoBehaviour
     }
 
     // Build the final junction object
-    public GameObject BuildContinuation()
+    public GameObject BuildContinuation(float multiplier)
     {
         RoadProperties firstProperties = firstRoad.gameObject.GetComponent<RoadProperties>();
         RoadProperties secondProperties = gameObject.GetComponent<RoadProperties>();
 
-        // Create the gameobject
-        GameObject junctionObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        junctionObject.name = "EAE";
         MeshFilter continuationMeshFilter = junctionObject.GetComponent<MeshFilter>();
 
         // End, Start and Mid of the junction
         Vector3 firstRoadEnd = firstRoad.transform.position +
-            (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1] - new Vector3(0.5f, 0, 0)));
-        Vector3 secondRoadStart = transform.position + (transform.TransformDirection(secondProperties.points[0]) + new Vector3(0.5f, 0, 0));
+            (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
+        Vector3 secondRoadStart = transform.position + (transform.TransformDirection(secondProperties.points[0]));
+        secondRoadStart = new Vector3((float)(secondRoadStart.x * 100f) / 100f,
+            (float)(secondRoadStart.y * 100f) / 100f, (float)(secondRoadStart.z * 100f) / 100f);
         Vector3 midPosition = firstRoadEnd + (secondRoadStart - firstRoadEnd);
 
         // Positioning junction
@@ -121,16 +136,18 @@ public class PreviewColliderScript : MonoBehaviour
 
         // Control Points
         List<Vector2> controlPoints = new List<Vector2>();
-        controlPoints.Add(firstRoadEnd - ((firstRoadEnd - secondRoadStart) / 2));
-        controlPoints.Add(firstRoadEnd - ((firstRoadEnd - secondRoadStart) /2));
+        controlPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd + firstRoad.transform.TransformDirection(new Vector3(Vector3.Distance(secondRoadStart, firstRoadEnd) / MathF.PI, 0, 0))));
+        controlPoints.Add(Vector3Extensions.ToVector2(secondRoadStart + transform.TransformDirection(new Vector3(-Vector3.Distance(secondRoadStart, firstRoadEnd) / MathF.PI, 0,0))));
 
         Debugger.Primitive(PrimitiveType.Cube, "1", firstRoadEnd + Vector3Extensions.ToVector3(anchorPoints[0]), Quaternion.Euler(0, 0, 0));
-        Debugger.Primitive(PrimitiveType.Cube, "2", firstRoadEnd + Vector3Extensions.ToVector3(controlPoints[0]), Quaternion.Euler(0, 0, 0));
-        Debugger.Primitive(PrimitiveType.Cube, "3", firstRoadEnd + Vector3Extensions.ToVector3(controlPoints[1]), Quaternion.Euler(0, 0, 0));
+        Debugger.Primitive(PrimitiveType.Cube, "2", Vector3Extensions.ToVector3(controlPoints[0]), Quaternion.Euler(0, 0, 0));
+        Debugger.Primitive(PrimitiveType.Cube, "3", Vector3Extensions.ToVector3(controlPoints[1]), Quaternion.Euler(0, 0, 0));
         Debugger.Primitive(PrimitiveType.Cube, "4", firstRoadEnd + Vector3Extensions.ToVector3(anchorPoints[1]), Quaternion.Euler(0, 0, 0));
 
+        controlPoints[0] -= Vector3Extensions.ToVector2(firstRoadEnd);
+        controlPoints[1] -= Vector3Extensions.ToVector2(firstRoadEnd);
         continuationMeshFilter.mesh =
-            RoadMesh.CreateStraightContinuationMesh(anchorPoints, controlPoints, 0.001f, firstProperties.width);
+            RoadMesh.CreateStraightContinuationMesh(anchorPoints, controlPoints, multiplier, firstProperties.width);
         return junctionObject;
     }
 

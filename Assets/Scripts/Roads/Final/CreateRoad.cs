@@ -40,7 +40,7 @@ public class CreateRoad : MonoBehaviour
 
         // Change angle of the road
         float angle = -Mathf.Atan2(points[1].z - points[0].z, points[1].x - points[0].x) * (180 / Mathf.PI);
-        road.transform.rotation = Quaternion.Euler(0, angle, 0);
+        road.transform.rotation = Quaternion.Euler(0, Mathf.Round(angle), 0);
 
 
         roadProperties = RoadMesh.CreateStraightMesh(points[0], points[1], multiplier, roadProperties.width, roadProperties);
@@ -49,6 +49,13 @@ public class CreateRoad : MonoBehaviour
         if (continuation)
         {
             Mesh newMesh = RoadMesh.UpdatePreviewMesh(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)));
+            /*
+            //Mesh newMesh = RoadMesh.RemoveMeshPoints(firstProperties, ((int)firstPointsToExclude), false);
+            Mesh newMesh = RoadMesh.RemoveMeshPoints(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)), true);
+            roadProperties.mesh = newMesh;
+            roadMeshFilter.mesh = newMesh;
+            newMesh = RoadMesh.RemoveMeshPoints(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)), false);
+            */
             roadProperties.mesh = newMesh;
             roadMeshFilter.mesh = newMesh;
             roadMeshCollider.sharedMesh = newMesh;
