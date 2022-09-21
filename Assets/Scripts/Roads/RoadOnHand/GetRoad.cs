@@ -140,7 +140,6 @@ public class GetRoad : MonoBehaviour
             }
             else if (points.Count == 1)
             {
-                Debug.Log(1);
                 // If there's one point and user right clicked, then destroy the straight preview and create a pre preview
                 points.RemoveAt(points.Count - 1);
                 Destroy(previewRoad);
@@ -149,9 +148,7 @@ public class GetRoad : MonoBehaviour
             }
             else if (points.Count == 2)
             {
-                Debug.Log(2);
                 // If there's two points and user right clicked, then destroy the curved preview and create a straigt preview
-                Debug.Log(points[0]);
                 points = new List<Vector3>() { points[0] };
                 StopAllCoroutines();
                 Destroy(previewRoad);

@@ -272,9 +272,71 @@ namespace RoadsMeshCreator
             mesh.uv = uvs;
             return mesh;
         }
-        
+
         /*--- Junctions ---*/
-        
+
+        public static Mesh CreateMeshAlongPoints(List<Vector2> pointsList, float roadWidth)
+        {
+            roadWidth *= 2;
+            List<Vector3> points = new List<Vector3>();
+            foreach (Vector2 vector in pointsList.ToArray())
+            {
+                points.Add(new Vector3(vector.x, 0, vector.y));
+            }
+
+            List<Vector3> verts = new List<Vector3>();
+            List<int> triangles = new List<int>();
+
+
+            // The first vertice is the middle and others are just the circle points
+            verts.Add(new Vector3(0, 0, 0));
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                verts.Add(new Vector3(points[i].x, points[i].y, points[i].z));
+            }
+
+            // Make triangles, going from index, to 0, to index + 1 /
+            // point - middle point - next point 
+            /*
+            for (int i = 1; i < points.Count - 1; i++)
+            {
+                triangles.Add(i);
+                triangles.Add(0);
+                triangles.Add(i + 1);
+            }
+            */
+            for (int i = points.Count - 1; i > 1; i--)
+            {
+                triangles.Add(i);
+                triangles.Add(0);
+                triangles.Add(i - 1);
+            }
+            // Create the uvs
+            List<Vector2> uvs = new List<Vector2>();
+            //uvs.Add(new Vector2(0, 0));
+            uvs.Add(new Vector2(0, 0));
+            for(int i = 0; i < points.Count / 2; i++)
+            {
+                float completionPercent = i / (float)(points.Count - 1);
+                uvs.Add(new Vector2(1, completionPercent));
+                uvs.Add(new Vector2(completionPercent, completionPercent));
+            }
+
+            Mesh mesh = new Mesh();
+            mesh.vertices = verts.ToArray();
+            mesh.triangles = triangles.ToArray();
+            mesh.uv = uvs.ToArray();
+            Vector3[] normals = mesh.normals;
+            for(int i = 0; i < normals.Length; i++)
+            {
+                normals[i] = -1 * normals[i];
+            }
+            mesh.normals = normals;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
         #region Junctions
         // Removes the specified amount of vertices from start or end of a mesh
         public static Mesh RemoveMeshPoints(RoadProperties roadProperties, int pointsToExclude, bool isFromStart)
@@ -297,7 +359,6 @@ namespace RoadsMeshCreator
             //newRoadProperties.points.remove(newRoadProperties.points.Count - 1 - pointsToExclude, pointsToExclude - 1);
 
             RemoveFrom(newRoadProperties.points, newRoadProperties.points.Count - pointsToExclude);
-            Debug.Log(newRoadProperties.points.Count);
 
 
             List<int> newTriangles = new List<int>();//oldMesh.triangles.ToList();
@@ -337,8 +398,6 @@ namespace RoadsMeshCreator
         // Update previous road (remove the ending points)
         public static Mesh UpdatePreviousMesh(RoadProperties roadProperties, int firstPointsToExclude)
         {
-            Debug.Log(roadProperties.points.Count);
-            Debug.Log(firstPointsToExclude);
 
             Mesh oldMesh = roadProperties.mesh;
             List<Vector3> oldVertices = oldMesh.vertices.ToList();
@@ -351,7 +410,6 @@ namespace RoadsMeshCreator
             RoadProperties newRoadProperties = roadProperties;
             //newRoadProperties.points.remove(newRoadProperties.points.Count - 1 - firstPointsToExclude, firstPointsToExclude - 1);
             RemoveFrom(newRoadProperties.points, newRoadProperties.points.Count - firstPointsToExclude);
-            Debug.Log(newRoadProperties.points.Count);
 
 
             List<int> newTriangles = new List<int>();//oldMesh.triangles.ToList();
@@ -450,7 +508,6 @@ namespace RoadsMeshCreator
             // Remove the initials points
             RoadProperties newRoadProperties = roadProperties;
             newRoadProperties.points.RemoveRange(0, previewPointsToExclude);
-            Debug.Log(newRoadProperties.points.Count);
 
 
             List<int> newTriangles = new List<int>();//oldMesh.triangles.ToList();
@@ -528,31 +585,24 @@ namespace RoadsMeshCreator
             pointsList.Add(end);
             */
 
-            Debug.Log("b");
             //mid += (end / 2);
             for (float i = 0; i < 1; i += multiplier)
             {
                 /*
-                Debug.Log("a");
                 float tAngle = Mathf.Lerp(0, angle * (MathF.PI / 180) / 2, i);
-                Debug.Log("b");
                 pointsList.Add(mid + (new Vector2(Mathf.Cos(tAngle),
                     MathF.Sin(tAngle)) * (roadWidth * 2)));
-                Debug.Log("c");
                 */
-                Debug.Log("c");
                 Vector2 bezierPoint = BezierCurves.Cubic(i, anchorPoints[0], controlPoints[0], controlPoints[1], anchorPoints[1]);
                 pointsList.Add(bezierPoint);
-                
+
                 //pointsList.Add(Vector3Extensions.ToVector2(BezierCurves.Cubic(i, startPoint, mid2 - startPoint, mid2 - startPoint, endPoint)));
                 //Vector3 a = Vector3.Lerp(Vector3Extensions.ToVector3(start), Vector3Extensions.ToVector3(mid), i);
                 //Vector3 b = Vector3.Lerp(Vector3Extensions.ToVector3(mid), Vector3Extensions.ToVector3(end), i);
                 //pointsList.Add(Vector3Extensions.ToVector2(Vector3.Slerp(a, b, i)));
                 //CustomDebugger.Debugger.Primitive(PrimitiveType.Cube, "Aqui", startPoint + Vector3Extensions.ToVector3(pointsList.Last()), Quaternion.Euler(0, 0, 0));
-                Debug.Log("d");
             }
             pointsList.Add(anchorPoints[1]);
-            Debug.Log("e");
             // Iterate to get the distance of startPoint and endPoint traveled by the road
             float distance = 0;
             for (int i = pointsList.Count - 1; i > 1; i--)
@@ -667,12 +717,11 @@ namespace RoadsMeshCreator
             }
             else
             {
-                Debug.Log("VÁ SE FODER");
                 return new Vector2();
             }
         }
         #endregion
 
-        
+
     }
 }

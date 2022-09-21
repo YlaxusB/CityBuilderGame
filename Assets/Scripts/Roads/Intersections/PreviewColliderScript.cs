@@ -38,9 +38,6 @@ public class PreviewColliderScript : MonoBehaviour
 
                 // Removes the points of the first road starting from end
                 MeshFilter firstMeshFilter = firstRoad.GetComponent<MeshFilter>();
-                Debug.Log("AAAAAAAAAAAAAAAAAAA");
-                Debug.Log(firstRoad.transform.TransformDirection(new Vector3(lastProperties.width, 0, 0)));
-                Debug.Log(transform.position);
                 transform.position += firstRoad.transform.TransformDirection(new Vector3(lastProperties.width * 10,0,0));
                 //Mesh newMesh = RoadMesh.RemoveMeshPoints(firstProperties, ((int)firstPointsToExclude), false);
                 //firstMeshFilter.mesh = newMesh;
@@ -124,38 +121,64 @@ public class PreviewColliderScript : MonoBehaviour
 
         // End, Start and Mid of the junction
         Vector3 firstRoadEnd = firstRoad.transform.position +
-            (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
+            (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1])) + firstRoad.transform.TransformDirection(new Vector3(0,0,-firstProperties.width));
         Vector3 secondRoadStart = transform.position + (transform.TransformDirection(secondProperties.points[0]));
         secondRoadStart = new Vector3((float)(secondRoadStart.x * 100f) / 100f,
             (float)(secondRoadStart.y * 100f) / 100f, (float)(secondRoadStart.z * 100f) / 100f);
         Vector3 midPosition = firstRoadEnd + (secondRoadStart - firstRoadEnd);
 
         // Positioning junction
-        junctionObject.transform.position = new Vector3(firstRoadEnd.x, 0.2f, firstRoadEnd.z);
-        junctionObject.transform.rotation = Quaternion.Euler(90, 0, 0);
+        junctionObject.transform.position = firstRoad.transform.position +
+            firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]);//new Vector3(firstRoadEnd.x, 0.2f, firstRoadEnd.z);
+        junctionObject.transform.rotation = Quaternion.Euler(0, firstRoad.transform.eulerAngles.y - 90, 180);
 
-        // Anchor Points
         List<Vector2> anchorPoints = new List<Vector2>();
         anchorPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd - firstRoadEnd));
-        anchorPoints.Add(Vector3Extensions.ToVector2(secondRoadStart - firstRoadEnd));
 
-        // Control Points
-        List<Vector2> controlPoints = new List<Vector2>();
-        controlPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd + firstRoad.transform.TransformDirection(new Vector3(Vector3.Distance(secondRoadStart, firstRoadEnd) / 2f, 0, 0))));
-        controlPoints.Add(Vector3Extensions.ToVector2(secondRoadStart + transform.TransformDirection(new Vector3(-Vector3.Distance(secondRoadStart, firstRoadEnd) / 2f, 0,0))));
-
+        junctionObject.transform.position = firstRoadEnd + Vector3Extensions.ToVector3(anchorPoints[0]);
         Debugger.Primitive(PrimitiveType.Cube, "1", firstRoadEnd + Vector3Extensions.ToVector3(anchorPoints[0]), Quaternion.Euler(0, 0, 0));
-        Debugger.Primitive(PrimitiveType.Cube, "2", Vector3Extensions.ToVector3(controlPoints[0]), Quaternion.Euler(0, 0, 0));
-        Debugger.Primitive(PrimitiveType.Cube, "3", Vector3Extensions.ToVector3(controlPoints[1]), Quaternion.Euler(0, 0, 0));
-        Debugger.Primitive(PrimitiveType.Cube, "4", firstRoadEnd + Vector3Extensions.ToVector3(anchorPoints[1]), Quaternion.Euler(0, 0, 0));
 
-        controlPoints[0] -= Vector3Extensions.ToVector2(firstRoadEnd);
-        controlPoints[1] -= Vector3Extensions.ToVector2(firstRoadEnd);
-        continuationMeshFilter.mesh =
-            RoadMesh.CreateStraightContinuationMesh(anchorPoints, controlPoints, multiplier, firstProperties.width);
+        List<Vector2> points = CalculateVertices( (transform.eulerAngles.y - firstRoad.transform.eulerAngles.y), ((int)firstProperties.width) * 2, -(firstProperties.width));
+        for(int i = 0; i <= points.Count - 1; i++)
+        {
+            GameObject asd = Debugger.Primitive(PrimitiveType.Cube, "Point", firstRoadEnd +
+                new Vector3(points[i].x, 0, points[i].y), Quaternion.Euler(0, 0, 0));
+            asd.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+            asd.transform.SetParent(GameObject.Find("1").transform);
+        }
+        continuationMeshFilter.mesh = RoadMesh.CreateMeshAlongPoints(points, firstProperties.width);
         return junctionObject;
     }
 
+    /*
+    [Header("Mesh Options")]
+    [Min(0)]
+    [SerializeField]
+    private int trianglesPerRad = 5;
+    [SerializeField]
+    [Range(0f, 360f)]
+    private float angleInDegrees = 270f;
+    */
+    // Create arc
+    protected List<Vector2> CalculateVertices(float angleInDegrees, int trianglesPerRad, float width)
+    {
+        var triangleCount = GetTriangleCount(trianglesPerRad);
+        float sectorAngle = Mathf.Deg2Rad * angleInDegrees;
+        var vertices = new List<Vector2>();
+        //vertices.Add(Vector2.zero);
+        for (int i = 0; i <= triangleCount + 1; i++)
+        {
+            float theta = i / (float)triangleCount * sectorAngle;
+            var vertex = (new Vector3(Mathf.Cos(theta), 0, Mathf.Sin(theta)) * width) * 2;
+            vertices.Add(new Vector2(vertex.x, vertex.z));
+        }
+        //vertices.Add();
+        return vertices;
+    }
+    private int GetTriangleCount(int trianglesPerRad)
+    {
+        return Mathf.CeilToInt(12 * Mathf.PI * trianglesPerRad);
+    }
     /*
      // Get continuation object
 public GameObject GetContinuation()
@@ -189,7 +212,6 @@ public GameObject GetContinuation()
     float dist = Vector3.Distance(endCollidedRoad, previewStart);
     Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
     //Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(previewProperties.points[0]) - transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
-    Debug.Log(-Vector3.Distance(ctrl2, previewStart));
     //controlPoints.Add(endCollidedRoad + ((previewStart - endCollidedRoad) / 2));
     //controlPoints.Add(endCollidedRoad + ((previewStart - endCollidedRoad) / 2));
     //controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(dist / 2, 0,0))));
@@ -242,7 +264,6 @@ public class PreviewColliderScript : MonoBehaviour
     {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Road"))
         {
-            Debug.Log(firstCollidedBool);
             RoadProperties colliderProperties = collision.gameObject.GetComponent<RoadProperties>();
             List<Vector3> colliderPoints = colliderProperties.points;
 
@@ -400,7 +421,6 @@ public GameObject GetContinuation()
     float dist = Vector3.Distance(endCollidedRoad, previewStart);
     Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
     //Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(previewProperties.points[0]) - transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
-    Debug.Log(-Vector3.Distance(ctrl2, previewStart));
     //controlPoints.Add(endCollidedRoad + ((previewStart - endCollidedRoad) / 2));
     //controlPoints.Add(endCollidedRoad + ((previewStart - endCollidedRoad) / 2));
     //controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(dist / 2, 0,0))));
@@ -448,8 +468,6 @@ public void AdjustContinuation(GameObject collidedObject, GameObject previewObje
     int oldestLastIndex = continuationMF.mesh.triangles.Length - 1;
     //newVertices = continuationMF.mesh.vertices.ToList();
     //newTriangles = continuationMF.mesh.triangles.ToList();
-    Debug.Log(newTriangles.Count - 1);
-    Debug.Log(newVertices.Count - 1);
 
     newVertices.Add(collidedMF.mesh.vertices[collidedMF.mesh.vertices.Length]);
     newVertices.Add(collidedMF.mesh.vertices[collidedMF.mesh.vertices.Length - 1]);
@@ -464,11 +482,9 @@ public void AdjustContinuation(GameObject collidedObject, GameObject previewObje
     newTriangles.Add(2);
     newTriangles.Add(3);
 
-    Debug.Log("a");
     newMesh.vertices = newVertices.ToArray();
     newMesh.triangles = newTriangles.ToArray();
     //continuationMF.mesh = newMesh;
-    Debug.Log("b");
 
 
     GameObject asd = GameObject.CreatePrimitive(PrimitiveType.Plane);
@@ -500,3 +516,41 @@ public void InsertProperties(RoadProperties roadProperties, GameObject continuat
 }
 }
 */
+
+
+
+
+
+
+
+
+
+
+/***
+    [Header("Mesh Options")]
+    [Min(0)]
+    [SerializeField]
+    private int trianglesPerRad = 5;
+    [SerializeField]
+    [Range(0f, 360f)]
+    private float angleInDegrees = 270f;
+    protected List<Vector3> CalculateVertices()
+    {
+        var triangleCount = GetTriangleCount();
+        float sectorAngle = Mathf.Deg2Rad * angleInDegrees;
+        var vertices = new List<Vector3>();
+        //vertices.Add(Vector2.zero);
+        for (int i = 0; i <= triangleCount + 1; i++)
+        {
+            float theta = i / (float)triangleCount * sectorAngle;
+            var vertex = new Vector3(Mathf.Cos(theta), Mathf.Sin(theta), 0);
+            vertices.Add(vertex);
+        }
+        //vertices.Add();
+        return vertices;
+    }
+    private int GetTriangleCount()
+    {
+        return Mathf.CeilToInt(2 * Mathf.PI * trianglesPerRad);
+    }
+***/
