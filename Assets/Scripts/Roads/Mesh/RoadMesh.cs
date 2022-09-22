@@ -325,7 +325,7 @@ namespace RoadsMeshCreator
             Mesh mesh = new Mesh();
             mesh.vertices = verts.ToArray();
             mesh.triangles = triangles.ToArray();
-            mesh.uv = uvs.ToArray();
+            //mesh.uv = uvs.ToArray();
             Vector3[] normals = mesh.normals;
             for(int i = 0; i < normals.Length; i++)
             {

@@ -75,15 +75,14 @@ public class GetRoad : MonoBehaviour
             StopAllCoroutines();
             addPoint();
 
-            // if the player selected the straight shape and there are 2 points, then remove the old
-            // preview and create the final road
+            // if the player selected the straight shape and there are 2 points, then remove the old preview and
+            // create the final road
             if (shape == "straight" && points.Count == 2)
             {
                 // Check if it's a continuation
                 if (continuation)
                 {
                     CreateRoad.Straight(points, roadProperties, continuation);
-                    //CreateRoad.StraightContinuation();
                     PreviewColliderScript colliderScript = previewRoad.GetComponent<PreviewColliderScript>();
                     GameObject roadContinuation = colliderScript.BuildContinuation(0.01f);
                     colliderScript.InsertProperties(roadProperties, roadContinuation);

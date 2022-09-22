@@ -52,45 +52,46 @@ namespace Preview
         public static IEnumerator Update(GameObject road, RoadProperties roadProperties, List<Vector3> points, bool continuation)
         {
             float distanceFromPreviousRoad = roadProperties.width * 2f;
-            Vector3 pos = points[0] - road.transform.TransformDirection(new Vector3(distanceFromPreviousRoad, 0, 0));
+            Vector3 startPos = points[0];
             bool canRun = true;
             while (canRun && points.Count > 0)
             {
+                Vector3 junctionPos = points[0];
+                Vector3 endJunction = points[0];
+                Vector3 startJunction = points[0];
+                float width = 0;
+
+                if (GameObject.Find("Preview Junction") != null)
+                {
+                    GameObject previewJunction = GameObject.Find("Preview Junction");
+                    ContinuationProperties continuationProperties = previewJunction.GetComponent<ContinuationProperties>();
+                    width = continuationProperties.width;
+                    junctionPos = previewJunction.transform.position;
+                    startJunction = previewJunction.GetComponent<ContinuationProperties>().startPos;
+                    endJunction = previewJunction.GetComponent<ContinuationProperties>().endPos;
+                }
+
+
                 MeshFilter roadMeshFilter = road.GetComponent<MeshFilter>();
-                Vector3 endPosition = Raycasts.raycastPosition3D(roadProperties.camera);
+                Vector3 endPosition = Raycasts.raycastPosition3D(roadProperties.camera) +
+                    road.transform.TransformDirection(new Vector3(0, 0, -roadProperties.width));
                 //wapoints[0] = pos + road.transform.TransformDirection(new Vector3(10, 0, 0));
 
                 // Rotate road 
-                float angle = -Mathf.Atan2(Mathf.Round(endPosition.z) - Mathf.Round(points[0].z),
-                    Mathf.Round(endPosition.x) - Mathf.Round(points[0].x)) * (180 / Mathf.PI);
-                road.transform.rotation = Quaternion.Euler(0, Mathf.Round(angle), 0);
+                float angle = -Mathf.Atan2(endPosition.z - junctionPos.z, endPosition.x - junctionPos.x) * (180 / Mathf.PI);
+                road.transform.rotation = Quaternion.Euler(0, angle, 0);
 
                 // Update Mesh //
-                road.transform.position = pos + road.transform.TransformDirection(new Vector3(distanceFromPreviousRoad, 0, 0));
+                road.transform.position = junctionPos + road.transform.TransformDirection(new Vector3(0,0, width));
+                //road.transform.position = new Vector3(road.transform.position.x, 0.2f, road.transform.position.z);
                 Mesh newMesh = RoadMesh.CreateStraightMesh(points[0],
                     endPosition, 0.1f, roadProperties.width, roadProperties).mesh;
                 roadProperties.mesh = newMesh;
+                roadMeshFilter.mesh = newMesh;
 
-                if (continuation)
-                {
-                    road.transform.position -= new Vector3(0, 0.8f, 0);
-                    roadMeshFilter.mesh = newMesh;
-                    //roadMeshFilter.mesh = RoadMesh.UpdatePreviewMesh(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)));
-                }
-                else
-                {
-                    roadMeshFilter.mesh = newMesh;
-                }
-
-
-                //road.transform.ro
-
-                // Check colliding and create intersections
+                // Checks colliding and create intersections
                 MeshCollider roadMeshCollider = road.GetComponent<MeshCollider>();
-                if (roadMeshFilter.mesh.vertexCount > 5)
-                {
-                    roadMeshCollider.sharedMesh = roadMeshFilter.mesh;
-                }
+                roadMeshCollider.sharedMesh = roadMeshFilter.mesh;
                 roadMeshCollider.convex = true;
 
                 // Update properties from preview

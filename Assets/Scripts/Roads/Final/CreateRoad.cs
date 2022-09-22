@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+using System.Linq;
 
 using CustomHelper;
 using RoadsMeshCreator;
@@ -31,36 +33,31 @@ public class CreateRoad : MonoBehaviour
 
         // Add this plane to preview roads "folder" and start the update preview that runs each game update
         road.transform.parent = GameObject.Find("Final Roads").transform;
-        roadMeshFilter.mesh = RoadMesh.CreateStraightMesh(points[0], points[1], multiplier, roadProperties.width, roadProperties).mesh;
 
         // Mesh Collider
         MeshCollider roadMeshCollider = road.GetComponent<MeshCollider>();
         roadMeshCollider.sharedMesh = roadMeshFilter.mesh;
         roadMeshCollider.convex = true;
-
         // Change angle of the road
-        float angle = -Mathf.Atan2(points[1].z - points[0].z, points[1].x - points[0].x) * (180 / Mathf.PI);
-        road.transform.rotation = Quaternion.Euler(0, Mathf.Round(angle), 0);
+        points[0] = new Vector3(points[0].x, 0.2f, points[0].z);
+        Vector3 endPosition = Raycasts.raycastPosition3D(roadProperties.camera) +
+            road.transform.TransformDirection(new Vector3(0, 0, 0));
 
+        // Rotate road 
+        float angle = -Mathf.Atan2(endPosition.z - points[0].z, endPosition.x - points[0].x) * (180 / Mathf.PI);
+        road.transform.rotation = Quaternion.Euler(0, angle, 0);
 
-        roadProperties = RoadMesh.CreateStraightMesh(points[0], points[1], multiplier, roadProperties.width, roadProperties);
-
-        // Check if its a continuation
+        // Update Mesh //
+        road.transform.position = points[0] + road.transform.TransformDirection(new Vector3(0, 0, roadProperties.width));
 
         if (continuation)
         {
-            Mesh newMesh = RoadMesh.UpdatePreviewMesh(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)));
-            /*
-            //Mesh newMesh = RoadMesh.RemoveMeshPoints(firstProperties, ((int)firstPointsToExclude), false);
-            Mesh newMesh = RoadMesh.RemoveMeshPoints(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)), true);
-            roadProperties.mesh = newMesh;
-            roadMeshFilter.mesh = newMesh;
-            newMesh = RoadMesh.RemoveMeshPoints(roadProperties, ((int)(Mathf.Ceil(roadProperties.width / 5) + 1)), false);
-            */
-            roadProperties.mesh = newMesh;
-            roadMeshFilter.mesh = newMesh;
-            roadMeshCollider.sharedMesh = newMesh;
+            GameObject.Find("1A").name = points[0].ToString();
         }
+
+
+        roadMeshFilter.mesh = RoadMesh.CreateStraightMesh(points[0], endPosition, multiplier, roadProperties.width, roadProperties).mesh;
+        roadProperties = RoadMesh.CreateStraightMesh(points[0], endPosition, multiplier, roadProperties.width, roadProperties);
         road.AddComponent(roadProperties.GetType());
         RoadProperties component = road.GetComponent<RoadProperties>();
         component.ChangeProperties(roadProperties);

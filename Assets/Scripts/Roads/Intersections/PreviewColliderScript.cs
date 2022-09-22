@@ -10,11 +10,14 @@ public class PreviewColliderScript : MonoBehaviour
 {
     bool collidedFirstRoad;
     GameObject firstRoad;
-    RoadProperties firstProperties;
-
-    float firstPointsToExclude = 0;
-    float lastPointsToExclude = 0;
     GameObject junctionObject;
+
+    public float a1;
+    public float a2;
+    public float a3;
+    public float a4;
+
+    float finalValue = 0;
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -29,41 +32,11 @@ public class PreviewColliderScript : MonoBehaviour
             {
                 firstRoad = collision.gameObject;
                 collidedFirstRoad = true;
-                firstProperties = firstRoad.gameObject.GetComponent<RoadProperties>();
-
-                RoadProperties lastProperties = gameObject.GetComponent<RoadProperties>();
-                // The points that will be excluded, to create the junction
-                firstPointsToExclude = Mathf.Ceil(firstProperties.width * 1);
-                lastPointsToExclude = Mathf.Ceil(lastProperties.width * 0.5f);
-
-                // Removes the points of the first road starting from end
-                MeshFilter firstMeshFilter = firstRoad.GetComponent<MeshFilter>();
-                transform.position += firstRoad.transform.TransformDirection(new Vector3(lastProperties.width * 10,0,0));
-                //Mesh newMesh = RoadMesh.RemoveMeshPoints(firstProperties, ((int)firstPointsToExclude), false);
-                //firstMeshFilter.mesh = newMesh;
-                //firstProperties.mesh = newMesh;
 
                 // Creates the junction object
                 junctionObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-                junctionObject.name = "Junction Object";
-
-                // Takes the end of the first road
-                Vector3 firstRoadEnd = firstRoad.transform.position +
-                    (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
-
-                // Junction Positioning
-                junctionObject.transform.position = firstRoadEnd;
-                junctionObject.transform.rotation = Quaternion.Euler(90, 0, 0);
-                junctionObject.GetComponent<MeshFilter>().mesh = lastProperties.mesh;
-
-                MeshFilter junctionMeshFilter = junctionObject.GetComponent<MeshFilter>();
-
-                // Start of second road and mid between first and second road
-                RoadProperties secondProperties = gameObject.GetComponent<RoadProperties>();
-                Vector3 secondRoadStart = transform.position +
-                    (transform.TransformDirection(secondProperties.points[secondProperties.points.Count - 1]));
-                Vector3 midPosition = firstRoadEnd + (secondRoadStart - firstRoadEnd);
-
+                junctionObject.AddComponent<ContinuationProperties>();
+                junctionObject.name = "Preview Junction";
                 StartCoroutine(UpdateJunctionPreview(0.03f));
 
             }
@@ -71,83 +44,134 @@ public class PreviewColliderScript : MonoBehaviour
 
     }
 
-    // Loop to update the junction preview
+    // Loop to update the already existing junction preview
     private IEnumerator UpdateJunctionPreview(float multiplier)
     {
         while (true)
         {
             RoadProperties firstProperties = firstRoad.gameObject.GetComponent<RoadProperties>();
             RoadProperties secondProperties = gameObject.GetComponent<RoadProperties>();
-
             MeshFilter junctionMeshFilter = junctionObject.GetComponent<MeshFilter>();
 
-            // End, Start and Mid of the junction
+            // End from first road and Start from second road
             Vector3 firstRoadEnd = firstRoad.transform.position +
                 (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
             Vector3 secondRoadStart = transform.position + (transform.TransformDirection(secondProperties.points[0]));
-            secondRoadStart = new Vector3((float)(secondRoadStart.x * 100f) / 100f,
-                (float)(secondRoadStart.y * 100f) / 100f, (float)(secondRoadStart.z * 100f) / 100f);
-            Vector3 midPosition = firstRoadEnd + (secondRoadStart - firstRoadEnd);
 
-            // Anchor Points
-            List<Vector2> anchorPoints = new List<Vector2>();
-            anchorPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd - firstRoadEnd));
-            anchorPoints.Add(Vector3Extensions.ToVector2(secondRoadStart - firstRoadEnd));
+            // Positioning junction
+            junctionObject.transform.rotation = Quaternion.Euler(0, firstRoad.transform.eulerAngles.y - 90, 180);
+            junctionObject.transform.position = firstRoadEnd + (firstRoadEnd - firstRoadEnd) +
+                junctionObject.transform.TransformDirection(new Vector3(firstProperties.width, 0, 0));
 
-            // Control Points
-            List<Vector2> controlPoints = new List<Vector2>();
-            controlPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd + firstRoad.transform.TransformDirection(new Vector3(Vector3.Distance(secondRoadStart, firstRoadEnd) / 2f, 0, 0))));
-            controlPoints.Add(Vector3Extensions.ToVector2(secondRoadStart + transform.TransformDirection(new Vector3(-Vector3.Distance(secondRoadStart, firstRoadEnd) / 2f, 0, 0))));
+            // Get arc angle
+            Vector3 endPosition = Raycasts.raycastPosition3D(firstProperties.camera);
+            Vector3 start = junctionObject.transform.position + junctionObject.transform.TransformDirection(-firstProperties.width, 0, 0);
+            float angle = -Mathf.Atan2(start.z - transform.position.z,
+                start.x - transform.position.x) * (180 / Mathf.PI);
+            angle = Math.Abs(firstRoad.transform.eulerAngles.y - transform.transform.eulerAngles.y);
+            finalValue = angle;//(Math.Abs(angle) - (firstRoad.transform.eulerAngles.y - Math.Abs(angle)));
+            a1 = angle;
+            a2 = firstRoad.transform.eulerAngles.y;
+            GameObject.Find("1A").transform.position = transform.position;
+            GameObject.Find("2A").transform.position = junctionObject.transform.position +
+                junctionObject.transform.TransformDirection(-firstProperties.width * 2, 0, 0);
+            a4 = Vector3.Distance(junctionObject.transform.position +
+                junctionObject.transform.TransformDirection(-firstProperties.width * 2, 0, 0), 
+                transform.position);
+            finalValue = angle;
+            if(finalValue < 0)
+            {
+                finalValue = Math.Abs(finalValue) + Math.Abs(180 - Math.Abs(finalValue));
+            }
+            //finalValue = Vector3.Dot(junctionObject.transform.position +
+           //     junctionObject.transform.TransformDirection(-firstProperties.width, 0, 0), transform.position) * Mathf.Deg2Rad;
+            a3 = finalValue;
 
-            controlPoints[0] -= Vector3Extensions.ToVector2(firstRoadEnd);
-            controlPoints[1] -= Vector3Extensions.ToVector2(firstRoadEnd);
+            Vector3 secondVertice = transform.position + transform.TransformDirection(0,0,firstProperties.width);
 
-            MeshFilter continuationMeshFilter = junctionObject.GetComponent<MeshFilter>();
-            continuationMeshFilter.mesh =
-                RoadMesh.CreateStraightContinuationMesh(anchorPoints, controlPoints, multiplier, firstProperties.width);
+            GameObject.Find("1A").transform.position = secondVertice;
+            var degrees = angle;
+            var radians = degrees * Mathf.Deg2Rad;
+            var x = Mathf.Cos(radians);
+            var y = Mathf.Sin(radians);
+            //var pos = Vector3(x, y, 0); //Vector2 is fine, if you're in 2D
 
+            // Get the arc points and build mesh
+            List<Vector2> points = CalculateVertices(finalValue,
+                ((int)firstProperties.width) / 2, -(firstProperties.width));
+            junctionMeshFilter.mesh = RoadMesh.CreateMeshAlongPoints(points, firstProperties.width);
+
+            InsertProperties(points, firstProperties); // Insert values into continuation object
             yield return null;
         }
 
     }
 
+    private void InsertProperties(List<Vector2> points, RoadProperties roadProperties)
+    {
+        // Set the continuation properties
+        ContinuationProperties continuationProperties = junctionObject.GetComponent<ContinuationProperties>();
+        continuationProperties.startPos = new Vector3(points[0].x, 0.2f, points[0].y);
+        continuationProperties.endPos = new Vector3(points[points.Count - 1].x, 0.2f, points[points.Count - 1].y);
+        continuationProperties.width = roadProperties.width;
+    }
+
     // Build the final junction object
     public GameObject BuildContinuation(float multiplier)
     {
+        junctionObject.name = "Junction";
         RoadProperties firstProperties = firstRoad.gameObject.GetComponent<RoadProperties>();
         RoadProperties secondProperties = gameObject.GetComponent<RoadProperties>();
-
         MeshFilter continuationMeshFilter = junctionObject.GetComponent<MeshFilter>();
 
-        // End, Start and Mid of the junction
+        // End from first road and Start from second road
         Vector3 firstRoadEnd = firstRoad.transform.position +
-            (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1])) + firstRoad.transform.TransformDirection(new Vector3(0,0,-firstProperties.width));
+            (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
         Vector3 secondRoadStart = transform.position + (transform.TransformDirection(secondProperties.points[0]));
-        secondRoadStart = new Vector3((float)(secondRoadStart.x * 100f) / 100f,
-            (float)(secondRoadStart.y * 100f) / 100f, (float)(secondRoadStart.z * 100f) / 100f);
-        Vector3 midPosition = firstRoadEnd + (secondRoadStart - firstRoadEnd);
 
         // Positioning junction
-        junctionObject.transform.position = firstRoad.transform.position +
-            firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]);//new Vector3(firstRoadEnd.x, 0.2f, firstRoadEnd.z);
         junctionObject.transform.rotation = Quaternion.Euler(0, firstRoad.transform.eulerAngles.y - 90, 180);
+        junctionObject.transform.position = firstRoadEnd + (firstRoadEnd - firstRoadEnd) +
+            junctionObject.transform.TransformDirection(new Vector3(firstProperties.width, 0, 0));
 
-        List<Vector2> anchorPoints = new List<Vector2>();
-        anchorPoints.Add(Vector3Extensions.ToVector2(firstRoadEnd - firstRoadEnd));
-
-        junctionObject.transform.position = firstRoadEnd + Vector3Extensions.ToVector3(anchorPoints[0]);
-        Debugger.Primitive(PrimitiveType.Cube, "1", firstRoadEnd + Vector3Extensions.ToVector3(anchorPoints[0]), Quaternion.Euler(0, 0, 0));
-
-        List<Vector2> points = CalculateVertices( (transform.eulerAngles.y - firstRoad.transform.eulerAngles.y), ((int)firstProperties.width) * 2, -(firstProperties.width));
-        for(int i = 0; i <= points.Count - 1; i++)
-        {
-            GameObject asd = Debugger.Primitive(PrimitiveType.Cube, "Point", firstRoadEnd +
-                new Vector3(points[i].x, 0, points[i].y), Quaternion.Euler(0, 0, 0));
-            asd.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-            asd.transform.SetParent(GameObject.Find("1").transform);
-        }
+        // Get the arc points and build mesh
+        List<Vector2> points = CalculateVertices(finalValue,
+            ((int)firstProperties.width) / 2, -(firstProperties.width));
         continuationMeshFilter.mesh = RoadMesh.CreateMeshAlongPoints(points, firstProperties.width);
+
+
+        InsertProperties(points, firstProperties);
+        // Get arc angle
+        Vector3 endPosition = Raycasts.raycastPosition3D(firstProperties.camera);
+        Vector3 start = junctionObject.transform.position + junctionObject.transform.TransformDirection(-firstProperties.width, 0, 0);
+        float angle = -Mathf.Atan2(start.z - transform.position.z,
+            start.x - transform.position.x) * (180 / Mathf.PI);
+        finalValue = angle;
+        List<Vector2> asd = ArcPercentage(360 * 0.25f,
+            ((int)firstProperties.width) / 2, -(firstProperties.width));
+        foreach (Vector2 vector in asd.ToArray())
+        {
+            Debugger.Primitive(PrimitiveType.Cube, "Testing", junctionObject.transform.position +
+                new Vector3(vector.x, 0.2f, vector.y), Quaternion.Euler(0, 0, 0));
+        }
+        Debug.Log(asd.Count);
         return junctionObject;
+    }
+
+    protected List<Vector2> ArcPercentage(float angleInDegrees, int trianglesPerRad, float width)
+    {
+        var triangleCount = GetTriangleCount(trianglesPerRad);
+        float sectorAngle = Mathf.Deg2Rad * angleInDegrees;
+        var vertices = new List<Vector2>();
+        //vertices.Add(Vector2.zero);
+        for (int i = 0; i <= triangleCount + 1; i++)
+        {
+            float theta = i / (float)triangleCount * sectorAngle;
+            var vertex = (new Vector3(Mathf.Cos(theta), 0, Mathf.Sin(theta)) * width) * 2;
+            vertices.Add(new Vector2(vertex.x, vertex.z));
+        }
+        //vertices.Add();
+        return vertices;
     }
 
     /*
@@ -175,56 +199,11 @@ public class PreviewColliderScript : MonoBehaviour
         //vertices.Add();
         return vertices;
     }
+    // Get how many triangles the arc will have
     private int GetTriangleCount(int trianglesPerRad)
     {
         return Mathf.CeilToInt(12 * Mathf.PI * trianglesPerRad);
     }
-    /*
-     // Get continuation object
-public GameObject GetContinuation()
-{
-    RoadProperties firstProperties = firstCollidedObject.gameObject.GetComponent<RoadProperties>();
-    RoadProperties previewProperties = gameObject.GetComponent<RoadProperties>();
-    GameObject continuationObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-    MeshFilter continuationMeshFilter = continuationObject.GetComponent<MeshFilter>();
-    continuationObject.name = "EAE";
-    Vector3 endCollidedRoad = firstCollidedObject.transform.position +
-        (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
-
-    continuationObject.transform.position = new Vector3(endCollidedRoad.x, 0.2f, endCollidedRoad.z);
-    continuationObject.transform.rotation = Quaternion.Euler(90, 0, 0);
-    // The end of previous road
-    endCollidedRoad = firstCollidedObject.transform.position +
-        (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
-
-    // The start of preview (after the points are deleted)
-    Vector3 previewStart = transform.position + (transform.TransformDirection(previewProperties.points[0]));
-
-    // The mid point to bezier, but its just the first (deleted) point of preview start
-    Vector3 midPoint = transform.position;
-
-    // Create and apply the new mesh
-    Vector3 mid2 = endCollidedRoad + (firstCollidedObject.transform.TransformDirection(new Vector3(Vector3.Distance(previewStart, endCollidedRoad) ,0,0)));
-    List<Vector2> anchorPoints = new List<Vector2>();
-    anchorPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad));
-    anchorPoints.Add(Vector3Extensions.ToVector2(previewStart));
-    List<Vector2> controlPoints = new List<Vector2>();
-    float dist = Vector3.Distance(endCollidedRoad, previewStart);
-    Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
-    //Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(previewProperties.points[0]) - transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
-    //controlPoints.Add(endCollidedRoad + ((previewStart - endCollidedRoad) / 2));
-    //controlPoints.Add(endCollidedRoad + ((previewStart - endCollidedRoad) / 2));
-    //controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(dist / 2, 0,0))));
-    controlPoints.Add(ctrl2);
-    controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(Vector3.Distance(anchorPoints[0], controlPoints[0]), 0, 0))));
-    Vector3 intersection = new Vector3();
-
-
-    continuationMeshFilter.mesh = RoadMesh.CreateStraightContinuationMesh(anchorPoints, controlPoints, 0.001f, firstProperties.width);
-    //AdjustContinuation(firstCollidedObject, gameObject, continuationObject);
-    return continuationObject;
-}
-     */
 
     // Destroy the continuation preview
     public void DestroyContinuation()
@@ -242,315 +221,3 @@ public GameObject GetContinuation()
 
     }
 }
-/*
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using RoadsMeshCreator;
-using CustomHelper;
-using CustomDebugger;
-using System;
-using System.Linq;
-public class PreviewColliderScript : MonoBehaviour
-{
-    bool firstCollidedBool = false;
-    GameObject firstCollidedObject;
-
-    GameObject a;
-    GameObject b;
-    GameObject c;
-    GameObject d;
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Road"))
-        {
-            RoadProperties colliderProperties = collision.gameObject.GetComponent<RoadProperties>();
-            List<Vector3> colliderPoints = colliderProperties.points;
-
-            if (!firstCollidedBool)
-            {
-                firstCollidedObject = collision.gameObject;
-                firstCollidedBool = true;
-
-                //////////
-                RoadProperties firstProperties = firstCollidedObject.gameObject.GetComponent<RoadProperties>();
-                RoadProperties previewProperties = gameObject.GetComponent<RoadProperties>();
-
-                // The points that will be excluded, to create their connections
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                float firstPointsToExclude = Mathf.Ceil(firstProperties.width * 1);
-                float previewPointsToExclude = Mathf.Ceil(previewProperties.width * 1);
-                //previewPointsToExclude = firstPointsToExclude;
-                // Remove the last points of collided road
-                Mesh newMesh = RoadMesh.UpdatePreviousMesh(firstProperties, ((int)(firstPointsToExclude * 0.75f)));
-
-                // Delete the last x points of the previous road mesh
-                MeshFilter firstCollidedMeshFilter = firstCollidedObject.gameObject.GetComponent<MeshFilter>();
-                firstCollidedMeshFilter.mesh = newMesh;
-
-                // Delete the first x points of this preview road mesh
-                gameObject.GetComponent<MeshFilter>().mesh = RoadMesh.UpdatePreviewMesh(previewProperties,
-                    ((int)(previewPointsToExclude * 0.75f) + 1));
-
-                // Continuation mesh
-
-                //GameObject continuationObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-                //continuationObject.transform.position = firstCollidedObject.transform.position; //- firstProperties.points[firstProperties.points.Count - 1];
-                //continuationObject.transform.rotation = firstCollidedObject.transform.rotation;
-                //continuationObject.transform.position += continuationObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]);
-                //continuationObject.transform.rotation = firstCollidedObject.transform.rotation;
-                //continuationObject.name = "continuation object";
-
-
-// Create a bezier between last road and the new created road
-
-GameObject continuationObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            continuationObject.name = "continuation object";
-            Vector3 endCollidedRoad = firstCollidedObject.transform.position +
-                (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
-
-            continuationObject.transform.position = endCollidedRoad;
-            continuationObject.transform.rotation = Quaternion.Euler(90, 0, 0);
-
-            MeshFilter continuationMeshFilter = continuationObject.GetComponent<MeshFilter>();
-
-            Vector3 midPoint = firstCollidedObject.transform.position;
-
-            Vector3 previewStart = transform.position + (transform.TransformDirection(previewProperties.points[0]));//previewProperties.points[0]));
-
-            // Debugg
-            a = Debugger.Primitive(PrimitiveType.Cube, "a", endCollidedRoad, Quaternion.Euler(0,0,0));
-            b = Debugger.Primitive(PrimitiveType.Cube, "b", midPoint, Quaternion.Euler(0, 0, 0));
-            c = Debugger.Primitive(PrimitiveType.Cube, "c", previewStart, Quaternion.Euler(0, 0, 0));
-
-            d = Debugger.Primitive(PrimitiveType.Cube, "d", new Vector3(0,0,0), Quaternion.Euler(0, 0, 0));
-
-            // Start updating the connection
-            StartCoroutine(UpdateStart());
-        }
-
-
-        // Check if road is colliding with the previous road (in case of road continuation)
-        if (firstCollidedBool)
-        {
-            RoadProperties firstProperties = firstCollidedObject.gameObject.GetComponent<RoadProperties>();
-            List<Vector3> firstPoints = firstProperties.points;
-
-            RoadProperties previewProperties = gameObject.GetComponent<RoadProperties>();
-
-            // How many points will be exluded when a road is pointing left or right (in relation to previous road)
-            // pointing to a side will be there more colliing points, so the width divided by 5 (5 is the spacing between road points and)
-            // is the quantity of points needed to exclude (+ 1 because the last point is less than 5 spacing)
-            float firstPointsToExclude = Mathf.Ceil(firstProperties.width / 7) + 1;
-            float previewPointsToExclude = Mathf.Ceil(previewProperties.width / 1) + 1;
-            // Keep removing 
-            //MeshFilter filter = gameObject.GetComponent<MeshFilter>();
-            //filter.mesh = RoadMesh.UpdatePreviewMesh(previewProperties, ((int)previewPointsToExclude));
-        }
-    }
-}
-
-private IEnumerator UpdateStart()
-{
-    while (true)
-    {
-        RoadProperties firstProperties = firstCollidedObject.gameObject.GetComponent<RoadProperties>();
-        RoadProperties previewProperties = gameObject.GetComponent<RoadProperties>();
-
-        GameObject continuationObject = GameObject.Find("continuation object");
-        MeshFilter continuationMeshFilter = continuationObject.GetComponent<MeshFilter>();
-
-        // The end of previous road
-        Vector3 endCollidedRoad = firstCollidedObject.transform.position +
-            (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1] - new Vector3(0.5f, 0, 0)));
-
-        // The start of preview (after the points are deleted)
-        Vector3 previewStart = transform.position + (transform.TransformDirection(previewProperties.points[0]) + new Vector3(0.5f, 0, 0));
-
-        // The mid point to bezier, but its just the first (deleted) point of preview start
-        Vector3 midPoint = transform.position;
-
-        // Create and apply the new mesh
-        continuationMeshFilter.mesh = RoadMesh.CreateBezierMesh(endCollidedRoad, midPoint, previewStart, 0.01f, firstProperties.width);
-
-        // Debugg
-        a.transform.position = endCollidedRoad;
-        b.transform.position = midPoint;
-        c.transform.position = previewStart;
-
-        List<Mesh> meshes = new List<Mesh>();
-        meshes.Add(firstCollidedObject.GetComponent<MeshFilter>().mesh);
-        meshes.Add(gameObject.GetComponent<MeshFilter>().mesh);
-        meshes.Add(continuationMeshFilter.mesh);
-        MeshFilter dMeshf = d.GetComponent<MeshFilter>();
-        dMeshf.mesh = RoadMesh.CombineMeshes(meshes);
-
-        yield return null;
-    }
-}
-
-// Get continuation object
-public GameObject GetContinuation()
-{
-    RoadProperties firstProperties = firstCollidedObject.gameObject.GetComponent<RoadProperties>();
-    RoadProperties previewProperties = gameObject.GetComponent<RoadProperties>();
-    GameObject continuationObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-    MeshFilter continuationMeshFilter = continuationObject.GetComponent<MeshFilter>();
-    continuationObject.name = "EAE";
-    Vector3 endCollidedRoad = firstCollidedObject.transform.position +
-        (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
-
-    continuationObject.transform.position = new Vector3(endCollidedRoad.x, 0.2f, endCollidedRoad.z);
-    continuationObject.transform.rotation = Quaternion.Euler(90, 0, 0);
-    // The end of previous road
-    endCollidedRoad = firstCollidedObject.transform.position +
-        (firstCollidedObject.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
-
-    // The start of preview (after the points are deleted)
-    Vector3 previewStart = transform.position + (transform.TransformDirection(previewProperties.points[0]));
-
-    // The mid point to bezier, but its just the first (deleted) point of preview start
-    Vector3 midPoint = transform.position;
-
-    // Create and apply the new mesh
-    Vector3 mid2 = endCollidedRoad + (firstCollidedObject.transform.TransformDirection(new Vector3(Vector3.Distance(previewStart, endCollidedRoad) ,0,0)));
-    List<Vector2> anchorPoints = new List<Vector2>();
-    anchorPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad));
-    anchorPoints.Add(Vector3Extensions.ToVector2(previewStart));
-    List<Vector2> controlPoints = new List<Vector2>();
-    float dist = Vector3.Distance(endCollidedRoad, previewStart);
-    Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
-    //Vector2 ctrl2 = Vector3Extensions.ToVector2(previewStart + transform.TransformDirection(previewProperties.points[0]) - transform.TransformDirection(new Vector3(-(dist / 2), 0, 0)));
-    //controlPoints.Add(endCollidedRoad + ((previewStart - endCollidedRoad) / 2));
-    //controlPoints.Add(endCollidedRoad + ((previewStart - endCollidedRoad) / 2));
-    //controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(dist / 2, 0,0))));
-    controlPoints.Add(ctrl2);
-    controlPoints.Add(Vector3Extensions.ToVector2(endCollidedRoad + firstCollidedObject.transform.TransformDirection(new Vector3(Vector3.Distance(anchorPoints[0], controlPoints[0]), 0, 0))));
-    Vector3 intersection = new Vector3();
-
-
-    continuationMeshFilter.mesh = RoadMesh.CreateStraightContinuationMesh(anchorPoints, controlPoints, 0.001f, firstProperties.width);
-    //AdjustContinuation(firstCollidedObject, gameObject, continuationObject);
-    return continuationObject;
-}
-public static bool LineLineIntersection(out Vector3 intersection, Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
-{
-    Vector3 lineVec3 = linePoint2 - linePoint1;
-    Vector3 crossVec1and2 = Vector3.Cross(lineVec1, lineVec2);
-    Vector3 crossVec3and2 = Vector3.Cross(lineVec3, lineVec2);
-
-    float planarFactor = Vector3.Dot(lineVec3, crossVec1and2);
-
-    //is coplanar, and not parrallel
-    if (Mathf.Abs(planarFactor) < 0.0001f && crossVec1and2.sqrMagnitude > 0.0001f)
-    {
-        float s = Vector3.Dot(crossVec3and2, crossVec1and2) / crossVec1and2.sqrMagnitude;
-        intersection = linePoint1 + (lineVec1 * s);
-        return true;
-    }
-    else
-    {
-        intersection = Vector3.zero;
-        return false;
-    }
-}
-// Adjust continuation
-public void AdjustContinuation(GameObject collidedObject, GameObject previewObject, GameObject continuationObject)
-{
-    MeshFilter collidedMF = collidedObject.GetComponent<MeshFilter>();
-    MeshFilter previewMF = previewObject.GetComponent<MeshFilter>();
-    MeshFilter continuationMF = continuationObject.GetComponent<MeshFilter>();
-
-    Mesh newMesh = new Mesh();
-    List<Vector3> newVertices = new List<Vector3>();
-    List<int> newTriangles = new List<int>();
-
-    int oldestLastIndex = continuationMF.mesh.triangles.Length - 1;
-    //newVertices = continuationMF.mesh.vertices.ToList();
-    //newTriangles = continuationMF.mesh.triangles.ToList();
-
-    newVertices.Add(collidedMF.mesh.vertices[collidedMF.mesh.vertices.Length]);
-    newVertices.Add(collidedMF.mesh.vertices[collidedMF.mesh.vertices.Length - 1]);
-    newVertices.Add(continuationMF.mesh.vertices[0]);
-    newVertices.Add(continuationMF.mesh.vertices[1]);
-
-    newTriangles.Add(0);
-    newTriangles.Add(2);
-    newTriangles.Add(3);
-
-    newTriangles.Add(1);
-    newTriangles.Add(2);
-    newTriangles.Add(3);
-
-    newMesh.vertices = newVertices.ToArray();
-    newMesh.triangles = newTriangles.ToArray();
-    //continuationMF.mesh = newMesh;
-
-
-    GameObject asd = GameObject.CreatePrimitive(PrimitiveType.Plane);
-    MeshFilter asdf = asd.GetComponent<MeshFilter>();
-    asdf.mesh.Clear();
-    asd.transform.position = continuationMF.transform.position;
-    asd.transform.rotation = continuationMF.transform.rotation;
-    asdf.mesh = newMesh;
-    //return continuationObject;
-}
-
-// Destroy the continuation preview
-public void DestroyContinuation()
-{
-    Destroy(a);
-    Destroy(b);
-    Destroy(c);
-    Destroy(GameObject.Find("continuation object"));
-    StopAllCoroutines();
-}
-
-// Insert some properties to road continuation
-public void InsertProperties(RoadProperties roadProperties, GameObject continuation)
-{
-    MeshRenderer continuationMaterial = continuation.GetComponent<MeshRenderer>();
-    continuationMaterial.material = roadProperties.material;
-    continuationMaterial.material.mainTexture = roadProperties.texture;
-
-}
-}
-*/
-
-
-
-
-
-
-
-
-
-
-/***
-    [Header("Mesh Options")]
-    [Min(0)]
-    [SerializeField]
-    private int trianglesPerRad = 5;
-    [SerializeField]
-    [Range(0f, 360f)]
-    private float angleInDegrees = 270f;
-    protected List<Vector3> CalculateVertices()
-    {
-        var triangleCount = GetTriangleCount();
-        float sectorAngle = Mathf.Deg2Rad * angleInDegrees;
-        var vertices = new List<Vector3>();
-        //vertices.Add(Vector2.zero);
-        for (int i = 0; i <= triangleCount + 1; i++)
-        {
-            float theta = i / (float)triangleCount * sectorAngle;
-            var vertex = new Vector3(Mathf.Cos(theta), Mathf.Sin(theta), 0);
-            vertices.Add(vertex);
-        }
-        //vertices.Add();
-        return vertices;
-    }
-    private int GetTriangleCount()
-    {
-        return Mathf.CeilToInt(2 * Mathf.PI * trianglesPerRad);
-    }
-***/
