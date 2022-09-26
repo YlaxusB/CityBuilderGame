@@ -79,6 +79,8 @@ namespace Preview
 
                 // Rotate road 
                 float angle = -Mathf.Atan2(endPosition.z - junctionPos.z, endPosition.x - junctionPos.x) * (180 / Mathf.PI);
+                GameObject.Find("1B").transform.position = junctionPos;
+                GameObject.Find("2B").transform.position = endPosition; ;
                 road.transform.rotation = Quaternion.Euler(0, angle, 0);
 
                 // Update Mesh //

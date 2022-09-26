@@ -82,15 +82,15 @@ public class GetRoad : MonoBehaviour
                 // Check if it's a continuation
                 if (continuation)
                 {
-                    CreateRoad.Straight(points, roadProperties, continuation);
                     PreviewColliderScript colliderScript = previewRoad.GetComponent<PreviewColliderScript>();
                     GameObject roadContinuation = colliderScript.BuildContinuation(0.01f);
-                    colliderScript.InsertProperties(roadProperties, roadContinuation);
+                    CreateRoad.Straight(points, roadProperties, continuation, roadContinuation);
+                    //colliderScript.InsertProperties(roadProperties, roadContinuation);
                     colliderScript.DestroyContinuation();
                 }
                 else
                 {
-                    CreateRoad.Straight(points, roadProperties, continuation);
+                    CreateRoad.Straight(points, roadProperties, continuation, null);
                     PreviewColliderScript colliderScript = previewRoad.GetComponent<PreviewColliderScript>();
                     colliderScript.DestroyContinuation();
                 }

@@ -11,13 +11,8 @@ public class PreviewColliderScript : MonoBehaviour
     bool collidedFirstRoad;
     GameObject firstRoad;
     GameObject junctionObject;
-
-    public float a1;
-    public float a2;
-    public float a3;
-    public float a4;
-
-    float finalValue = 0;
+    public Vector3 arcEnd;
+    ContinuationProperties continuationProperties;
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -35,7 +30,19 @@ public class PreviewColliderScript : MonoBehaviour
 
                 // Creates the junction object
                 junctionObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-                junctionObject.AddComponent<ContinuationProperties>();
+                continuationProperties =
+                    junctionObject.AddComponent<ContinuationProperties>();
+
+                // End from first road and Start from second road
+                RoadProperties firstProperties = firstRoad.gameObject.GetComponent<RoadProperties>();
+                RoadProperties secondProperties = gameObject.GetComponent<RoadProperties>();
+                Vector3 firstRoadEnd = firstRoad.transform.position +
+                    (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
+                Vector3 secondRoadStart = transform.position + (transform.TransformDirection(secondProperties.points[0]));
+
+                continuationProperties.width = firstProperties.width;
+                continuationProperties.startPos = firstRoadEnd;
+                continuationProperties.endPos = secondRoadStart;
                 junctionObject.name = "Preview Junction";
                 StartCoroutine(UpdateJunctionPreview(0.03f));
 
@@ -66,47 +73,31 @@ public class PreviewColliderScript : MonoBehaviour
             // Get arc angle
             Vector3 endPosition = Raycasts.raycastPosition3D(firstProperties.camera);
             Vector3 start = junctionObject.transform.position + junctionObject.transform.TransformDirection(-firstProperties.width, 0, 0);
-            float angle = -Mathf.Atan2(start.z - transform.position.z,
-                start.x - transform.position.x) * (180 / Mathf.PI);
-            angle = Math.Abs(firstRoad.transform.eulerAngles.y - transform.transform.eulerAngles.y);
-            finalValue = angle;//(Math.Abs(angle) - (firstRoad.transform.eulerAngles.y - Math.Abs(angle)));
-            a1 = angle;
-            a2 = firstRoad.transform.eulerAngles.y;
-            GameObject.Find("1A").transform.position = transform.position;
-            GameObject.Find("2A").transform.position = junctionObject.transform.position +
-                junctionObject.transform.TransformDirection(-firstProperties.width * 2, 0, 0);
-            a4 = Vector3.Distance(junctionObject.transform.position +
-                junctionObject.transform.TransformDirection(-firstProperties.width * 2, 0, 0), 
-                transform.position);
-            finalValue = angle;
-            if(finalValue < 0)
-            {
-                finalValue = Math.Abs(finalValue) + Math.Abs(180 - Math.Abs(finalValue));
-            }
-            //finalValue = Vector3.Dot(junctionObject.transform.position +
-           //     junctionObject.transform.TransformDirection(-firstProperties.width, 0, 0), transform.position) * Mathf.Deg2Rad;
-            a3 = finalValue;
 
-            Vector3 secondVertice = transform.position + transform.TransformDirection(0,0,firstProperties.width);
-
-            GameObject.Find("1A").transform.position = secondVertice;
-            var degrees = angle;
-            var radians = degrees * Mathf.Deg2Rad;
-            var x = Mathf.Cos(radians);
-            var y = Mathf.Sin(radians);
-            //var pos = Vector3(x, y, 0); //Vector2 is fine, if you're in 2D
+            // Define Arc Angle
+            Vector3 secondVertice = transform.position + transform.TransformDirection(0, 0, firstProperties.width);
+            Vector3 firstRoadEndCenter = junctionObject.transform.position +
+                junctionObject.transform.TransformDirection(-firstProperties.width, 0, 0);
+            float angleFirstRoadToArcCenter = -Mathf.Atan2(firstRoadEndCenter.z - transform.position.z,
+                 firstRoadEndCenter.x - transform.position.x) * (180 / Mathf.PI);
+            float angleArcCenterToLastVertice = -Mathf.Atan2(transform.position.z - secondVertice.z,
+                transform.position.x - secondVertice.x) * (180 / Mathf.PI);
+            float localAngle1 = (junctionObject.transform.eulerAngles.y - angleArcCenterToLastVertice);
+            float localAngle2 = (junctionObject.transform.eulerAngles.y - angleFirstRoadToArcCenter);
+            float arcAngle = Mathf.Abs(Mathf.Clamp(localAngle2, 0, 90) -90) * 2;
 
             // Get the arc points and build mesh
-            List<Vector2> points = CalculateVertices(finalValue,
+            List<Vector2> points = CalculateVertices(arcAngle,
                 ((int)firstProperties.width) / 2, -(firstProperties.width));
             junctionMeshFilter.mesh = RoadMesh.CreateMeshAlongPoints(points, firstProperties.width);
 
-            InsertProperties(points, firstProperties); // Insert values into continuation object
+            //InsertProperties(points, firstProperties); // Insert values into continuation object
             yield return null;
         }
 
     }
 
+    /*
     private void InsertProperties(List<Vector2> points, RoadProperties roadProperties)
     {
         // Set the continuation properties
@@ -115,6 +106,7 @@ public class PreviewColliderScript : MonoBehaviour
         continuationProperties.endPos = new Vector3(points[points.Count - 1].x, 0.2f, points[points.Count - 1].y);
         continuationProperties.width = roadProperties.width;
     }
+    */
 
     // Build the final junction object
     public GameObject BuildContinuation(float multiplier)
@@ -129,32 +121,31 @@ public class PreviewColliderScript : MonoBehaviour
             (firstRoad.transform.TransformDirection(firstProperties.points[firstProperties.points.Count - 1]));
         Vector3 secondRoadStart = transform.position + (transform.TransformDirection(secondProperties.points[0]));
 
+        junctionObject.GetComponent<MeshRenderer>().material = firstProperties.material;
+
         // Positioning junction
         junctionObject.transform.rotation = Quaternion.Euler(0, firstRoad.transform.eulerAngles.y - 90, 180);
         junctionObject.transform.position = firstRoadEnd + (firstRoadEnd - firstRoadEnd) +
             junctionObject.transform.TransformDirection(new Vector3(firstProperties.width, 0, 0));
 
-        // Get the arc points and build mesh
-        List<Vector2> points = CalculateVertices(finalValue,
+        // Define Arc Angle
+        Vector3 secondVertice = transform.position + transform.TransformDirection(0, 0, firstProperties.width);
+        Vector3 firstRoadEndCenter = junctionObject.transform.position +
+            junctionObject.transform.TransformDirection(-firstProperties.width, 0, 0);
+        float angleFirstRoadToArcCenter = -Mathf.Atan2(firstRoadEndCenter.z - transform.position.z,
+             firstRoadEndCenter.x - transform.position.x) * (180 / Mathf.PI);
+        float angleArcCenterToLastVertice = -Mathf.Atan2(transform.position.z - secondVertice.z,
+            transform.position.x - secondVertice.x) * (180 / Mathf.PI);
+        float localAngle1 = (junctionObject.transform.eulerAngles.y - angleArcCenterToLastVertice);
+        float localAngle2 = (junctionObject.transform.eulerAngles.y - angleFirstRoadToArcCenter);
+        float arcAngle = Mathf.Abs(Mathf.Clamp(localAngle2, 0, 90) - 90) * 2;
+        // Create Arc
+        List<Vector2> points = CalculateVertices(arcAngle,
             ((int)firstProperties.width) / 2, -(firstProperties.width));
         continuationMeshFilter.mesh = RoadMesh.CreateMeshAlongPoints(points, firstProperties.width);
+        arcEnd = transform.position;
 
-
-        InsertProperties(points, firstProperties);
-        // Get arc angle
-        Vector3 endPosition = Raycasts.raycastPosition3D(firstProperties.camera);
-        Vector3 start = junctionObject.transform.position + junctionObject.transform.TransformDirection(-firstProperties.width, 0, 0);
-        float angle = -Mathf.Atan2(start.z - transform.position.z,
-            start.x - transform.position.x) * (180 / Mathf.PI);
-        finalValue = angle;
-        List<Vector2> asd = ArcPercentage(360 * 0.25f,
-            ((int)firstProperties.width) / 2, -(firstProperties.width));
-        foreach (Vector2 vector in asd.ToArray())
-        {
-            Debugger.Primitive(PrimitiveType.Cube, "Testing", junctionObject.transform.position +
-                new Vector3(vector.x, 0.2f, vector.y), Quaternion.Euler(0, 0, 0));
-        }
-        Debug.Log(asd.Count);
+        continuationProperties.endPos = GameObject.Find("Straight Preview Road").transform.position;//transform.position;
         return junctionObject;
     }
 
@@ -213,11 +204,12 @@ public class PreviewColliderScript : MonoBehaviour
     }
 
     // Insert some properties to road continuation
+    /*
     public void InsertProperties(RoadProperties roadProperties, GameObject continuation)
     {
         MeshRenderer continuationMaterial = continuation.GetComponent<MeshRenderer>();
         continuationMaterial.material = roadProperties.material;
         continuationMaterial.material.mainTexture = roadProperties.texture;
-
     }
+    */
 }
