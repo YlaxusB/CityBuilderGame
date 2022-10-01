@@ -33,7 +33,7 @@ namespace Preview
         }
 
         // Update the PrePreview
-        public static IEnumerator Update(GameObject road, RoadProperties roadProperties)
+        public static IEnumerator Update(GameObject road, RoadProperties roadProperties, Vector3 suggestedEnd, GetRoad component)
         {
             bool canRun = true;
 
@@ -57,7 +57,13 @@ namespace Preview
 
                 // Set the position of preview to follow mouse
                 Vector3 endPosition = Raycasts.raycastLayer(roadProperties.camera, "Terrain") + new Vector3(0, roadProperties.height, 0);
-                road.transform.position = new Vector3(Mathf.Round(endPosition.x), endPosition.y, Mathf.Round(endPosition.z));
+                suggestedEnd = component.suggestedEnd;
+                if (suggestedEnd != Vector3.zero && suggestedEnd.x != Mathf.Infinity)
+                {
+                    Debug.Log(suggestedEnd);
+                    endPosition = suggestedEnd;
+                }
+                road.transform.position = new Vector3(endPosition.x, endPosition.y, endPosition.z);
                 yield return null;
             }
         }

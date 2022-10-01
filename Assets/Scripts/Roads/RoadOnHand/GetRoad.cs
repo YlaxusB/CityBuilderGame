@@ -37,6 +37,10 @@ public class GetRoad : MonoBehaviour
         shape = newShape;
     }
 
+    // the road wich mouse is over
+    private GameObject roadInMouse = null;
+    // the position mouse should be to exactly fit an already existing road
+    public Vector3 suggestedEnd = Vector3.zero;
     private void Start()
     {
         camera = GameObject.Find("Main Camera").GetComponent<Camera>();
@@ -61,13 +65,14 @@ public class GetRoad : MonoBehaviour
 
         // Start the PrePreview
         previewRoad = PrePreview.Create(roadProperties);
-        StartCoroutine(PrePreview.Update(previewRoad, roadProperties));
+        StartCoroutine(PrePreview.Update(previewRoad, roadProperties, suggestedEnd, gameObject.GetComponent<GetRoad>()));
     }
 
     int i = 0;
     private bool continuation = false;
     private void Update()
     {
+        HandleT();
         // When left click on any place that is not ui
         if (Input.GetButtonDown("Fire1") && !UIToolkitRaycastChecker.IsPointerOverUI() && Raycasts.isMouseOverLayer(camera, "Terrain"))
         {
@@ -143,7 +148,7 @@ public class GetRoad : MonoBehaviour
                 points.RemoveAt(points.Count - 1);
                 Destroy(previewRoad);
                 previewRoad = PrePreview.Create(roadProperties);
-                StartCoroutine(PrePreview.Update(previewRoad, roadProperties));
+                StartCoroutine(PrePreview.Update(previewRoad, roadProperties, Vector3.positiveInfinity, gameObject.GetComponent<GetRoad>()));
             }
             else if (points.Count == 2)
             {
@@ -159,6 +164,59 @@ public class GetRoad : MonoBehaviour
                 points.RemoveAt(points.Count - 1);
             }
         }
+    }
+
+    void HandleT()
+    {
+        RaycastHit hit;
+        Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+        Physics.Raycast(ray, out hit);
+        GameObject referenceRoad = hit.transform.gameObject;
+        Vector3 hittedPosition = hit.point;
+        if (IsMouseCloseToRoad(referenceRoad.transform))
+        {
+            roadInMouse = hit.transform.gameObject;
+            suggestedEnd = referenceRoad.transform.position + referenceRoad.transform.TransformDirection(Vector3.Distance(referenceRoad.transform.position, hittedPosition),0,0);
+            GameObject.Find("1E").transform.position = suggestedEnd;
+            //GameObject.Find("1E").transform.position = hittedPosition;
+            //MovePreviewToRoad(referenceRoad.transform);
+        } else
+        {
+            suggestedEnd = Vector3.zero;
+            roadInMouse = null;
+        }
+    }
+
+    /*
+    void HandleContinuation()
+    {
+
+        IsMouseCloseToRoad(referenceRoad.transform);
+    }
+    */
+
+    // Check if mouse is over or next to another existing road
+    bool IsMouseCloseToRoad(Transform referenceTransform)
+    {
+        RaycastHit hit;
+        Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+        Physics.Raycast(ray, out hit);
+        GameObject hittedObject = hit.transform.gameObject;
+        if(hittedObject.transform.name == "Road")
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+        // return true;
+    }
+
+    // Move mouse pointing to fit another existing road, this will help visualization to build new roads
+    void MovePreviewToRoad(Transform referenceTransform)
+    {
+
     }
 
     public void addPoint()
