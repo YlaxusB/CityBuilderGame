@@ -337,6 +337,73 @@ namespace RoadsMeshCreator
             return mesh;
         }
 
+        public static Mesh CreateMeshAlongPointsB(List<Vector2> pointsList, float roadWidth, bool reverseNormals)
+        {
+            // Iterate to get the distance of startPoint and endPoint traveled by the road
+            float distance = 0;
+            for (int i = pointsList.Count - 1; i > 1; i--)
+            {
+                distance += Vector3.Distance(pointsList[i], pointsList[i - 1]);
+            }
+
+            Vector2[] points = pointsList.ToArray();
+            // vertices = 2 * number of points
+            // triangles = (2 * (number of points - 1) * 3) 
+            Vector3[] verts = new Vector3[points.Length * 2];
+            Vector2[] uvs = new Vector2[verts.Length];
+            int[] tris = new int[2 * (points.Length - 1) * 3];
+            int vertIndex = 0;
+            int triIndex = 0;
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                Vector2 forward = Vector2.zero;
+                if (i < points.Length - 1)
+                {
+                    forward += points[i + 1] - points[i];
+                }
+                if (i > 0)
+                {
+                    forward += points[i] - points[i - 1];
+                }
+                forward.Normalize();
+                Vector2 left = new Vector2(-forward.y, forward.x);
+
+                //verts[vertIndex] = points[i] + (left * 2) * roadWidth;
+                verts[vertIndex] = Vector3.zero;
+                verts[vertIndex + 1] = points[i];// - (left / 4) * roadWidth;
+
+                float completionPercent = i / (float)(points.Length - 1);
+                uvs[vertIndex] = new Vector2(0, completionPercent);
+                uvs[vertIndex + 1] = new Vector2(1, completionPercent);
+
+
+                if (i < points.Length - 1)
+                {
+                    tris[triIndex + 3] = vertIndex + 1;
+                    tris[triIndex + 4] = vertIndex + 2;
+                    tris[triIndex + 5] = vertIndex + 3;
+
+
+                    tris[triIndex] = vertIndex;
+                    tris[triIndex + 1] = vertIndex + 2;
+                    tris[triIndex + 2] = vertIndex + 1;
+                }
+
+                vertIndex += 2;
+                triIndex += 6;
+            }
+            Mesh mesh = new Mesh();
+            mesh.vertices = verts;
+            mesh.triangles = tris;
+            if (reverseNormals)
+            {
+                mesh.triangles = mesh.triangles.Reverse().ToArray();
+            }
+            mesh.uv = uvs;
+            return mesh;
+        }
+
         #region Junctions
         // Removes the specified amount of vertices from start or end of a mesh
         public static Mesh RemoveMeshPoints(RoadProperties roadProperties, int pointsToExclude, bool isFromStart)

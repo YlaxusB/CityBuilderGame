@@ -164,7 +164,7 @@ public class GetRoad : MonoBehaviour
     public void addPoint()
     {
         Vector3 raycastPosition = Raycasts.raycastPosition3D(camera);
-        points.Add(new Vector3(Mathf.Round(raycastPosition.x), Mathf.Round(raycastPosition.y), Mathf.Round(raycastPosition.z)));
+        points.Add(new Vector3(Mathf.Round(raycastPosition.x), 0.2f, Mathf.Round(raycastPosition.z)));
     }
 }
 

@@ -45,7 +45,6 @@ namespace Preview
             // Add properties to preview
             RoadProperties previewProperties = previewRoad.AddComponent<RoadProperties>();
             previewProperties.ChangeProperties(roadProperties);
-
             return previewRoad;
         }
 
@@ -73,18 +72,55 @@ namespace Preview
 
 
                 MeshFilter roadMeshFilter = road.GetComponent<MeshFilter>();
-                Vector3 endPosition = Raycasts.raycastPosition3D(roadProperties.camera) +
-                    road.transform.TransformDirection(new Vector3(0, 0, -roadProperties.width));
+                Vector3 endPosition;
+                if (GameObject.Find("Straight Preview Road").GetComponent<PreviewColliderScript>().a1.z > 0) // Left
+                {
+                    endPosition = Raycasts.raycastPosition3D(roadProperties.camera) +
+                        road.transform.TransformDirection(new Vector3(0, 0, roadProperties.width));
+                }
+                else if (GameObject.Find("Straight Preview Road").GetComponent<PreviewColliderScript>().a1.z < 0)// Right
+                {
+                    endPosition = Raycasts.raycastPosition3D(roadProperties.camera) +
+                        road.transform.TransformDirection(new Vector3(0, 0, -roadProperties.width));
+                }
+                else
+                {
+                    endPosition = Raycasts.raycastPosition3D(roadProperties.camera);
+                }
                 //wapoints[0] = pos + road.transform.TransformDirection(new Vector3(10, 0, 0));
 
                 // Rotate road 
                 float angle = -Mathf.Atan2(endPosition.z - junctionPos.z, endPosition.x - junctionPos.x) * (180 / Mathf.PI);
-                GameObject.Find("1B").transform.position = junctionPos;
-                GameObject.Find("2B").transform.position = endPosition; ;
-                road.transform.rotation = Quaternion.Euler(0, angle, 0);
+                //GameObject.Find("2B").transform.position = endPosition;
 
+                if (continuation && road.GetComponent<PreviewColliderScript>().firstRoad != null)
+                {
+                    GameObject firstCollided = road.GetComponent<PreviewColliderScript>().firstRoad;
+                    GameObject junction = GameObject.Find("Preview Junction");
+                    float maxAngle = Mathf.Abs(firstCollided.transform.transform.position.z);
+                    float minAngle = -maxAngle;
+                    road.transform.rotation = Quaternion.Euler(0, angle, 0);
+
+                }
+                else
+                {
+                    road.transform.rotation = Quaternion.Euler(0, angle, 0);
+                }
                 // Update Mesh //
-                road.transform.position = junctionPos + road.transform.TransformDirection(new Vector3(0,0, width));
+
+                // Check if arc is pointing left or right
+                if (GameObject.Find("Straight Preview Road").GetComponent<PreviewColliderScript>().a1.z < 0) // Right
+                {
+                    road.transform.position = junctionPos + road.transform.TransformDirection(new Vector3(0, 0, width));
+                }
+                else if (GameObject.Find("Straight Preview Road").GetComponent<PreviewColliderScript>().a1.z > 0)// Left
+                {
+                    road.transform.position = junctionPos + road.transform.TransformDirection(new Vector3(0, 0, -width));
+                }
+                else
+                {
+                    road.transform.position = junctionPos;
+                }
                 //road.transform.position = new Vector3(road.transform.position.x, 0.2f, road.transform.position.z);
                 Mesh newMesh = RoadMesh.CreateStraightMesh(points[0],
                     endPosition, 0.1f, roadProperties.width, roadProperties).mesh;

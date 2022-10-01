@@ -15,6 +15,7 @@ public class CameraScript : MonoBehaviour
     }
     
     public Transform Camera;
+    public Transform pivot;
     public Vector3 cameraPosition;
     public Vector3 turn;
     public float altitude;
@@ -51,18 +52,22 @@ public class CameraScript : MonoBehaviour
     // Move camera relatively to camera rotation
     void moveCamera()
     {
-        Vector3 forward = Camera.forward;
+        Vector3 forward = pivot.forward;
         forward.y = 0;
-        Vector3 right = Camera.right;
+        Vector3 right = pivot.right;
         right.y = 0;
+        Vector3 up = Camera.up;
+        up.y = 0;
+        
 
-        Vector3 forwardRelativeInput = Input.GetAxis("Vertical") * forward * forwardSensivity;
-        Vector3 rightRelativeInput = Input.GetAxis("Horizontal") * right * rightSensivity;
-        float upInput = Input.GetAxis("Mouse ScrollWheel") * upSensivity;
+        Vector3 forwardRelativeInput = Input.GetAxis("Vertical") * forward * forwardSensivity * Time.deltaTime;
+        Vector3 rightRelativeInput = Input.GetAxis("Horizontal") * right * rightSensivity * Time.deltaTime;
+        Vector3 upInput = Input.GetAxis("Mouse ScrollWheel") * up * upSensivity * Time.deltaTime;
 
         Vector3 cameraRelativeMovement = forwardRelativeInput + rightRelativeInput;
         Camera.Translate(cameraRelativeMovement, Space.World);
-        Camera.localPosition += new Vector3(0,upInput,0);
+        Camera.Translate(upInput);
+        pivot.transform.localRotation = Quaternion.Euler(-Camera.transform.eulerAngles.x, 0, 0);
     }
 
     // Lock mouse on screen pressing K
