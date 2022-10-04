@@ -10,9 +10,10 @@ using RoadsMeshCreator;
 public class CreateRoad : MonoBehaviour
 {
     // Straight Road
-    public static void Straight(List<Vector3> points, RoadProperties roadProperties, bool continuation, GameObject roadContinuation)
+    public static void Straight(List<Vector3> points, Vector3 endPosition, RoadProperties roadProperties, bool continuation, GameObject roadContinuation)
     {
-        if (continuation)
+        // endPosition = Raycasts.raycastPosition3D(roadProperties.camera)
+        if (continuation && roadContinuation)
         {
             points[0] = roadContinuation.GetComponent<ContinuationProperties>().endPos;
         }
@@ -40,7 +41,6 @@ public class CreateRoad : MonoBehaviour
         // Change angle of the road
         points[0] = new Vector3(points[0].x, 0.2f, points[0].z);
 
-        Vector3 endPosition = Raycasts.raycastPosition3D(roadProperties.camera);
         float angle = -Mathf.Atan2(endPosition.z - points[0].z, endPosition.x - points[0].x) * (180 / Mathf.PI);
         road.transform.rotation = Quaternion.Euler(0, angle, 0);
 

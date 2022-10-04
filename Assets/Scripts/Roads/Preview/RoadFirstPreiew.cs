@@ -60,7 +60,6 @@ namespace Preview
                 suggestedEnd = component.suggestedEnd;
                 if (suggestedEnd != Vector3.zero && suggestedEnd.x != Mathf.Infinity)
                 {
-                    Debug.Log(suggestedEnd);
                     endPosition = suggestedEnd;
                 }
                 road.transform.position = new Vector3(endPosition.x, endPosition.y, endPosition.z);

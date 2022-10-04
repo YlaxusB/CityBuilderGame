@@ -121,6 +121,17 @@ public class PreviewColliderScript : MonoBehaviour
                 /* ------- Actually the best method to determine arc angle  ----------------------*/
                 arcAngle = Vector3.Angle(secondVertice - junctionObject.transform.position, (junctionObject.transform.position +
                     junctionPivot.transform.TransformDirection(0, 0, -firstProperties.width * 2)) - junctionObject.transform.position);
+                GameObject.Find("1G").transform.position = secondVertice - junctionObject.transform.position;
+                GameObject.Find("2G").transform.position = junctionObject.transform.position;
+                GameObject.Find("3G").transform.position = (junctionObject.transform.position +
+                    junctionPivot.transform.TransformDirection(0, 0, -firstProperties.width * 2)) - junctionObject.transform.position;
+                // arcAngle = Vector3.Angle(secondVertice - arcCenter, (arcCenter +
+                //   junctionPivot.transform.TransformDirection(0, 0, -firstProperties.width * 2)) -arcCenter);
+                GameObject.Find("4G").transform.position = secondVertice;
+
+
+                //GameObject.Find("5G").transform.position = ;
+                //GameObject.Find("6G").transform.position = ;
                 // Positioning junction
                 var euler = transform.parent.eulerAngles;
                 if (!d4)

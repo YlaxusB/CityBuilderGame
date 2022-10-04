@@ -34,7 +34,11 @@ namespace Preview
                 Raycasts.raycastLayer(roadProperties.camera, "Terrain"), 0.1f, roadProperties.width, roadProperties).mesh;
 
             // Collision System
-            previewRoad.AddComponent<PreviewColliderScript>();
+            if (continuation)
+            {
+                previewRoad.AddComponent<PreviewColliderScript>();
+            }
+
             Rigidbody rigidbody = previewRoad.AddComponent<Rigidbody>();
             rigidbody.useGravity = false;
             rigidbody.constraints = RigidbodyConstraints.FreezeAll;
@@ -135,7 +139,8 @@ namespace Preview
                 // Update properties from preview
                 RoadProperties previewProperties = road.GetComponent<RoadProperties>();
                 previewProperties.ChangeProperties(roadProperties);
-
+                Vector3 beforeHeight = road.transform.position;
+                road.transform.position = new Vector3(beforeHeight.x, 0.2f, beforeHeight.z);
                 yield return null;
             }
         }
